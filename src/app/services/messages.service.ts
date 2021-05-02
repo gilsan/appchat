@@ -20,7 +20,7 @@ export class MessagesService implements OnDestroy {
 
   currentChatUser: IUser = { displayName: 'none', email: '', photoURL: '', state: '', uid: 'none' };
 
-  enteredChat = new BehaviorSubject<boolean>(false);
+  enteredChat = new Subject<boolean>();
   enteredChat$ = this.enteredChat.asObservable();
 
   firstDocId: string;
@@ -35,7 +35,6 @@ export class MessagesService implements OnDestroy {
     private store: StoreService
   ) {
     this.userInfo = this.store.getUserInfo();
-    // console.log(this.userInfo);
   }
 
   ngOnDestroy(): void {
@@ -43,10 +42,6 @@ export class MessagesService implements OnDestroy {
   }
 
   getAllMessages(count: number): Observable<any> {
-    // const collRef = this.db.collection('conversations').ref;
-    // const queryRef = collRef.where('myemail', '==', this.userInfo.email)
-    //                   .where('withWhom', '==', this.currentChatUser.email).orderBy('timestamp', 'desc').limit(count);
-
     let len = 0;
     return from(this.db.collection('messages',
       ref => ref.where('myemail', '==', this.userInfo.email)
@@ -68,45 +63,15 @@ export class MessagesService implements OnDestroy {
   }
 
   getMessagesAll(uid: string, count: number): Observable<any> {
-    console.log('MESSAGE[getMessagesAll]: ', uid, this.currentChatUser.uid);
-    // this.db.collection('messages').doc(uid).collection('msgs').doc(this.currentChatUser.uid).collection('msgLists')
     return this.db.collection('messages').doc(uid).collection('msgs').doc(this.currentChatUser.uid)
-      .collection('msgLists', ref => ref.orderBy('timestamp', 'desc'))
+      .collection('msgLists', ref => ref.orderBy('timestamp', 'desc').limit(count))
       .valueChanges().pipe(
-        tap(data => console.log('[메세지] ', data))
+        // tap(data => console.log('[메세지] ', data))
       );
-    // return this.db.doc(`messages/${uid}`).collection('msgs',
-    //   ref => ref.where('sentBy', '==', this.userInfo.email)
-    //     .where('receivedBy', '==', this.currentChatUser.email)
-    //     .orderBy('timestamp', 'desc')
-    //     .limit(count)).valueChanges();
-    // .pipe(
-    //   tap(data => console.log('A TYPE: ', data)),
-    //   // map(snaps => snaps.docs.map(snap => snap.data()))
-    // );
 
-    // const receiveMsg$ = this.db.doc(`messages/${uid}`).collection('msgs',
-    //   ref => ref.where('sentBy', '==', this.currentChatUser.email)
-    //     .where('receivedBy', '==', this.userInfo.email)
-    //     .orderBy('timestamp', 'desc')
-    //     .limit(count)).valueChanges()
-    //   .pipe(
-    //     tap(data => console.log('B TYPE: ', data)),
-    //     // map(snaps => snaps.docs.map(snap => snap.data()))
-    //     filter(snaps => snaps.length > 0)
-    //   );
-
-    // combineLatest([sendMsg$, receiveMsg$]).subscribe(([a, b]) => {
-    //   console.log('A: ', a);
-    //   console.log('B: ', b);
-    //   const temp = [a, b];
-    //   console.log('TEMP', temp);
-    //   console.log(_.orderBy(temp, ['timestamp'], ['desc']));
-    // });
   }
 
   enterChat(user): void {
-    console.log('Message enterChat: ', user);
     if (user !== 'closed') {
       this.currentChatUser = user;
       this.enteredChat.next(true);
@@ -184,8 +149,7 @@ export class MessagesService implements OnDestroy {
           });
         });
       } else {
-        // const conversations: any = snapShot.docs[0].data();
-        // const messageId = conversations.messageId;
+
         this.db.doc(`messages/${uid}`).collection('msgs').add({
           message: newMsg,
           timestamp: firebase.default.firestore.FieldValue.serverTimestamp(),
@@ -215,7 +179,7 @@ export class MessagesService implements OnDestroy {
   }
 
   addNewMsg(newMsg: string, uid: string, myemail: string, type: string = 'txt'): void {
-    console.log('[메세지추가]', newMsg, uid, this.currentChatUser.uid);
+    // console.log('[메세지추가]', newMsg, uid, this.currentChatUser.uid);
     let isPic;
     if (type === 'txt') {
       isPic = false;
@@ -301,6 +265,16 @@ export class MessagesService implements OnDestroy {
       }
     });
    */
+  }
+
+  // 그림 올리기
+  uploadPic(file, uid): Observable<any> {
+    return from(this.storage.upload(`picmessages/${uid}`, file));
+  }
+
+  // 그림 URL 가져오기
+  getUploadedPicURL(uid): Observable<any> {
+    return this.storage.ref(`picmessages/${uid}`).getDownloadURL();
   }
 
 

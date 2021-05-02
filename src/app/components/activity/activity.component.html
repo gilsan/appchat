@@ -1,0 +1,27 @@
+<mat-accordion multi>
+
+   <mat-expansion-panel hidetoggle="true" [expanded]="isFriendExpand">
+     <mat-expansion-panel-header>
+       채팅자정보
+     </mat-expansion-panel-header>
+     <app-friend-info></app-friend-info>
+   </mat-expansion-panel>
+
+   <mat-expansion-panel hidetoggle="true" [expanded]="isGroupExpand">
+     <mat-expansion-panel-header>
+       구룹
+     </mat-expansion-panel-header>
+     <app-group-menu></app-group-menu>
+   </mat-expansion-panel>
+
+   <mat-expansion-panel hidetoggle="true" expanded="false">
+     <mat-expansion-panel-header>
+       알림
+     </mat-expansion-panel-header>
+     <app-notifications></app-notifications>
+   </mat-expansion-panel>
+
+ 
+
+
+</mat-accordion>

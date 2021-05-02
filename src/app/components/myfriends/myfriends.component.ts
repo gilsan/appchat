@@ -9,6 +9,7 @@ import { from } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { StoreService } from 'src/app/services/store.service';
 import { MessagesService } from 'src/app/services/messages.service';
+import { GroupService } from 'src/app/services/group.service';
 
 @Component({
   selector: 'app-myfriends',
@@ -32,7 +33,8 @@ export class MyfriendsComponent implements OnInit, OnDestroy {
     private friendsService: FriendsService,
     private snackBar: MatSnackBar,
     private store: StoreService,
-    private messagesService: MessagesService
+    private messagesService: MessagesService,
+    private groupService: GroupService
   ) { }
 
   ngOnInit(): void {
@@ -56,6 +58,7 @@ export class MyfriendsComponent implements OnInit, OnDestroy {
 
   enterChat(user): void {
     this.messagesService.enterChat(user);
+    this.groupService.enterGroup('closed');
   }
 
   findMyFriends(email: string): void {

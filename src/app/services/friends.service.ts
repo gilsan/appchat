@@ -45,47 +45,34 @@ export class FriendsService implements OnDestroy {
   }
 
   deleteMyFriends(email: string, uid: string, friendEmail: string, friendUid: string): Observable<any> {
-    return this.db.doc(`friends/${uid}`).collection('myfriends').snapshotChanges()
-      .pipe(
-        map(result => convertSnaps<any>(result)),
-        // map(results => {
-        //   return results.map(snap => {
-        //     return { id: results.id, ...results.data() as any };
-        //   });
-        // }),
-        map(lists => lists.filter(list => list.requestEmail === friendEmail)),
-        map(lists => lists.filter(list => list.id)),
-        switchMap(lists => from(lists)),
-        switchMap(item => this.db.doc(`friends/${uid}`).collection('myfriends').doc(item.id).delete()),
-        switchMap(() => this.db.doc(`friends/${friendUid}`).collection('myfriends').snapshotChanges()),
-        map(result => convertSnaps<any>(result)),
-        map(lists => lists.filter(list => list.requestEmail === email)),
-        map(lists => lists.filter(list => list.id)),
-        switchMap(lists => from(lists)),
-        switchMap(item => this.db.doc(`friends/${friendUid}`).collection('myfriends').doc(item.id).delete()),
-        tap(list => console.log(list)),
-        take(1),
-      );
-  }
-
-  deleteMyFriends2(uid: string, friendEmail: string): Observable<any> {
-    return from(this.db.doc(`friends/${uid}`).delete());
+    return from(this.db.doc(`users/${uid}`).collection('myfriends').doc(friendUid).delete());
+    // return this.db.doc(`friends/${uid}`).collection('myfriends').snapshotChanges()
+    //   .pipe(
+    //     map(result => convertSnaps<any>(result)),
+    //     // map(results => {
+    //     //   return results.map(snap => {
+    //     //     return { id: results.id, ...results.data() as any };
+    //     //   });
+    //     // }),
+    //     map(lists => lists.filter(list => list.requestEmail === friendEmail)),
+    //     map(lists => lists.filter(list => list.id)),
+    //     switchMap(lists => from(lists)),
+    //     switchMap(item => this.db.doc(`friends/${uid}`).collection('myfriends').doc(item.id).delete()),
+    //     switchMap(() => this.db.doc(`friends/${friendUid}`).collection('myfriends').snapshotChanges()),
+    //     map(result => convertSnaps<any>(result)),
+    //     map(lists => lists.filter(list => list.requestEmail === email)),
+    //     map(lists => lists.filter(list => list.id)),
+    //     switchMap(lists => from(lists)),
+    //     switchMap(item => this.db.doc(`friends/${friendUid}`).collection('myfriends').doc(item.id).delete()),
+    //     tap(list => console.log(list)),
+    //     take(1),
+    //   );
   }
 
 
-  getFriends2(email: string): Promise<any> {
-    return new Promise((resolve) => {
-      const friendsRef = this.db.collection('friends').ref;
-      const query = friendsRef.where('email', '==', email);
-      query.get().then((snapShot) => {
-        if (snapShot.empty) {
-          resolve('Nothing');
-        } else {
-          resolve('Exists');
-        }
-      });
-    });
-  }
+
+
+
 
   getFriends(email: string): Observable<any> {
     return this.db.collection('friends', ref => ref.where('email', '==', email)).snapshotChanges()

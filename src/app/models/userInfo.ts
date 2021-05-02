@@ -64,6 +64,7 @@ export interface IGroup {
   creator: string;
   groupName: string;
   groupPic: string;
+  groupId: string;
 }
 
 export interface IMember {

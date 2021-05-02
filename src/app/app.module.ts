@@ -30,6 +30,15 @@ import { ChatFeedComponent } from './components/chat-feed/chat-feed.component';
 import { LoadingSpinnerComponent } from './components/loading-spinner/loading-spinner.component';
 import { RelativeDatePipe } from './pipe/relative-date.pipe';
 import { SmartDatePipe } from './pipe/smart.pipe';
+import { ActivityComponent } from './components/activity/activity.component';
+import { FriendInfoComponent } from './components/friend-info/friend-info.component';
+import { GroupMenuComponent } from './components/group-menu/group-menu.component';
+import { NotificationsComponent } from './components/notifications/notifications.component';
+import { GroupInfoComponent } from './components/group-info/group-info.component';
+import { GroupChatFeedComponent } from './components/group-chat-feed/group-chat-feed.component';
+import { MygroupComponent } from './components/mygroup/mygroup.component';
+import { AddMemberComponent } from './components/add-member/add-member.component';
+import { RemoveMemberComponent } from './components/remove-member/remove-member.component';
 
 @NgModule({
   declarations: [
@@ -47,7 +56,16 @@ import { SmartDatePipe } from './pipe/smart.pipe';
     ChatFeedComponent,
     LoadingSpinnerComponent,
     RelativeDatePipe,
-    SmartDatePipe
+    SmartDatePipe,
+    ActivityComponent,
+    FriendInfoComponent,
+    GroupMenuComponent,
+    NotificationsComponent,
+    GroupInfoComponent,
+    GroupChatFeedComponent,
+    MygroupComponent,
+    AddMemberComponent,
+    RemoveMemberComponent
   ],
   imports: [
     BrowserModule,

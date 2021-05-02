@@ -5,7 +5,7 @@ import { FirestoreService } from 'src/app/services/firestore.service';
 import { SubSink } from 'subsink';
 
 
-import { IInfo, IMsg, IUser } from './../../models/userInfo';
+import { IGroup, IInfo, IMsg, IUser } from './../../models/userInfo';
 
 import { MatDialog } from '@angular/material/dialog';
 import { LoadingSpinnerComponent } from '../loading-spinner/loading-spinner.component';
@@ -16,20 +16,18 @@ import { SafeResourceUrl } from '@angular/platform-browser';
 import { UsersService } from 'src/app/services/users.service';
 import { MessagesService } from 'src/app/services/messages.service';
 import { StoreService } from './../../services/store.service';
+import { GroupService } from 'src/app/services/group.service';
 
 @Component({
-  selector: 'app-chat-feed',
-  templateUrl: './chat-feed.component.html',
-  styleUrls: ['./chat-feed.component.scss']
+  selector: 'app-group-chat-feed',
+  templateUrl: './group-chat-feed.component.html',
+  styleUrls: ['./group-chat-feed.component.scss']
 })
-export class ChatFeedComponent implements OnInit, OnDestroy {
-
+export class GroupChatFeedComponent implements OnInit, OnDestroy {
   private subs = new SubSink();
 
   @ViewChild('scrollMe') private myScroller: ElementRef;
   sanitizer: any;
-
-
   constructor(
     private firebaseAuth: AngularFireAuth,
     private messagesService: MessagesService,
@@ -37,7 +35,8 @@ export class ChatFeedComponent implements OnInit, OnDestroy {
     private firestoreService: FirestoreService,
     private userService: UsersService,
     private dialogRef: MatDialog,
-    private store: StoreService
+    private store: StoreService,
+    private groupService: GroupService,
   ) {
     this.myInfo = this.store.getUserInfo();
   }
@@ -50,7 +49,7 @@ export class ChatFeedComponent implements OnInit, OnDestroy {
   loadingSpinner = false;
   MyId: string;
   MyAvatar: string;
-  currentChatUser: IUser = { displayName: '', email: '', photoURL: '', state: '', uid: '' };
+  currentGroup: IGroup;
 
   newmessage: string;
   checkFirst = 1;
@@ -62,14 +61,11 @@ export class ChatFeedComponent implements OnInit, OnDestroy {
   pickMessage: FileList;
   isPicMsg = false;
 
-
-
   ngOnInit(): void {
-    this.enteredChat();
     this.getMyProfile();
-
+    this.enteredChat();
+    // this.enterGroup();
   }
-
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
@@ -77,6 +73,7 @@ export class ChatFeedComponent implements OnInit, OnDestroy {
 
   getMyProfile(): void {
     this.myInfo = this.store.getUserInfo();
+    // console.log('[GROUP CHAT]', this.myInfo);
     this.userService.getUser(this.myInfo.email)
       .subscribe((user: IUser[]) => {
         this.MyId = user[0].email;
@@ -84,51 +81,58 @@ export class ChatFeedComponent implements OnInit, OnDestroy {
       });
   }
 
-  enteredChat(): void {
-    this.subs.sink = this.messagesService.enteredChat$.subscribe(value => {
-      this.currentChatUser = this.messagesService.currentChatUser;
+  // enterGroup(): void {
+  //   this.subs.sink = this.groupService.enteredGroup$.subscribe((group) => {
+  //     console.log('[GROUP CHAT][10]');
+  //     if (group) {
+  //       this.currentGroup = this.groupService.currentGroup;
+  //     }
+  //   });
+  // }
 
+  enteredChat(): void {
+    this.subs.sink = this.groupService.enteredGroup$.subscribe(value => {
+      this.currentGroup = this.groupService.currentGroup;
       if (value) {
         this.showChat = value;
-        this.getMessages(this.count);
+        // this.getMessages(this.count);
       } else {
         this.showChat = value;
       }
 
     });
-  }
 
-  currentEmail(): void { }
+  }
 
   getMessages(count): void {
 
-    this.subs.sink = this.messagesService.getMessagesAll(this.myInfo.uid, count)
-      .subscribe((messages) => {
-        const reverse = _.reverse(messages);
-        this.messages = reverse; // 순서를 역순으로 만듬
-        // console.log('수신메세지: ', this.messages);
+    // this.subs.sink = this.messagesService.getMessagesAll(this.myInfo.uid, count)
+    //   .subscribe((messages) => {
+    //     const reverse = _.reverse(messages);
+    //     this.messages = reverse; // 순서를 역순으로 만듬
+    //     // console.log('수신메세지: ', this.messages);
 
-        if (this.messages.length === this.trackMsgCount) {
-          this.shouldLoad = false;
-        } else {
-          this.trackMsgCount = this.messages.length;
-        }
+    //     if (this.messages.length === this.trackMsgCount) {
+    //       this.shouldLoad = false;
+    //     } else {
+    //       this.trackMsgCount = this.messages.length;
+    //     }
 
-        if (this.checkFirst === 1) {
-          this.openDialog();
-          this.checkFirst += 1;
-        }
-        this.scrollDown();
+    //     if (this.checkFirst === 1) {
+    //       this.openDialog();
+    //       this.checkFirst += 1;
+    //     }
+    //     this.scrollDown();
 
-      });
+    //   });
   }
 
 
   getMessagesList(): void { }
 
   addMessage(type): void {
-    this.messagesService.addNewMsg(this.newmessage, this.myInfo.uid, this.myInfo.email, type);
-    this.newmessage = '';
+    // this.messagesService.addNewMsg(this.newmessage, this.myInfo.uid, this.myInfo.email, type);
+    // this.newmessage = '';
   }
 
   addMessageEvent(): void { }
@@ -167,16 +171,18 @@ export class ChatFeedComponent implements OnInit, OnDestroy {
   }
 
   sendImage(event): void {
-    const selectedFiles = event.target.files;
-    if (selectedFiles.item(0)) {
-      this.messagesService.uploadPic(selectedFiles.item(0), this.myInfo.uid)
-        .pipe(
-          concatMap(() => this.messagesService.getUploadedPicURL(this.myInfo.uid))
-        ).subscribe((data) => {
-          this.newmessage = data;
-          this.addMessage('pic');
-        });
-    }
+    // const selectedFiles = event.target.files;
+    // if (selectedFiles.item(0)) {
+    //   this.messagesService.uploadPic(selectedFiles.item(0), this.myInfo.uid)
+    //     .pipe(
+    //       concatMap(() => this.messagesService.getUploadedPicURL(this.myInfo.uid))
+    //     ).subscribe((data) => {
+    //       this.newmessage = data;
+    //       this.addMessage('pic');
+    //     });
+    // }
   }
+
+
 
 }

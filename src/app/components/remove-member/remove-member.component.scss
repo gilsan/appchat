@@ -1,0 +1,19 @@
+.btn-gp {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.btn-gp>button {
+  color: #666;
+  border: 1px solid #2196f3;
+  background-color: #fff;
+  font-size: 11px;
+  margin: 0 5px;
+}
+
+.btn-gp>button.btn-bg {
+  color: #fff;
+  border: 1px solid #2196f3;
+  background-color: #2196f3;
+  font-size: 11px;
+}
