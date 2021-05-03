@@ -1,4 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { IInfo, IUser } from 'src/app/models/userInfo';
+import { GroupService } from 'src/app/services/group.service';
+import { StoreService } from 'src/app/services/store.service';
+import { UsersService } from 'src/app/services/users.service';
 import { SubSink } from 'subsink';
 
 @Component({
@@ -9,7 +13,16 @@ import { SubSink } from 'subsink';
 export class GroupInfoComponent implements OnInit, OnDestroy {
 
   private subs = new SubSink();
-  constructor() { }
+  members = [];
+  currentGroup;
+  myInfo: IInfo;
+  user: IUser;
+
+  constructor(
+    private userService: UsersService,
+    private store: StoreService,
+    private groupService: GroupService,
+  ) { }
 
   ngOnInit(): void {
   }
@@ -17,5 +30,19 @@ export class GroupInfoComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.subs.unsubscribe();
   }
+
+  getMyProfile(): void {
+    this.myInfo = this.store.getUserInfo();
+    this.userService.getUser(this.myInfo.email)
+      .subscribe((user: IUser[]) => {
+        this.user = user[0];
+      });
+  }
+
+
+
+
+
+
 
 }
