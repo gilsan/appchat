@@ -87,7 +87,6 @@ export class ChatFeedComponent implements OnInit, OnDestroy {
   enteredChat(): void {
     this.subs.sink = this.messagesService.enteredChat$.subscribe(value => {
       this.currentChatUser = this.messagesService.currentChatUser;
-
       if (value) {
         this.showChat = value;
         this.getMessages(this.count);

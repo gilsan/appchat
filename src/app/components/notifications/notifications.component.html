@@ -1,1 +1,6 @@
-<p>notifications works!</p>
+<mat-list *ngIf="showNotifications">
+ <mat-list-item *ngFor="let msg of myNotifications; let i = index">
+   <img matListAvatar [src]="msg.senderPic">
+   <h3 matLine>{{msg.senderName}}님이 메세지를 보냈습니다. </h3>
+ </mat-list-item>
+</mat-list>

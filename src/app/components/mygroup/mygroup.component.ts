@@ -1,12 +1,13 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { IGroup, IInfo, IUser } from 'src/app/models/userInfo';
+import { IGroup, IInfo, IMember, IUser } from 'src/app/models/userInfo';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { GroupService } from 'src/app/services/group.service';
 import { StoreService } from 'src/app/services/store.service';
 import { UsersService } from 'src/app/services/users.service';
 import { SubSink } from 'subsink';
-import { tap } from 'rxjs/operators';
+import { switchMap, tap } from 'rxjs/operators';
 import { MessagesService } from 'src/app/services/messages.service';
+import { combineLatest, from } from 'rxjs';
 
 @Component({
   selector: 'app-mygroup',
@@ -20,6 +21,8 @@ export class MygroupComponent implements OnInit, OnDestroy {
   myInfo: IInfo;
   user: IUser;
   myGroups: IGroup[] = [];
+  groupLists: IGroup[] = [];
+
   private subs = new SubSink();
 
   constructor(
@@ -61,7 +64,19 @@ export class MygroupComponent implements OnInit, OnDestroy {
       .subscribe(groups => {
         this.myGroups = groups;
       });
+
+    // const groupLists$ = this.groupService.getGroupsByCreater(this.user.email);
+    // groupLists$
+    //   .pipe(
+    //     tap(groups => this.myGroups = groups),
+    //     switchMap(() => this.groupService.getMembersByEmail(this.user.email)),
+    //     switchMap(lists => from(lists)),
+    //     switchMap((list: IMember) => this.groupService.getGroupsByCreaterEmailGroup(list.creater, list.groupName)),
+    //     tap(group => this.myGroups.push({ ...group[0], isMyGroup: 'N' }))
+    //   )
+    //   .subscribe();
   }
+
 
   chooseImage(event, group): void {
     this.groupService.uploadProfilePic(event.target.files.item(0), group.groupId)
@@ -78,6 +93,7 @@ export class MygroupComponent implements OnInit, OnDestroy {
   refreshList(): void { }
 
   openGroup(group): void {
+
     this.groupService.enterGroup(group);
     this.messagesService.enterChat('closed');
 

@@ -6,6 +6,8 @@ export class IUser {
   state: string;
   uid: string;
   requestId?: string;
+  groupname?: string;
+  creater?: string;
 
 }
 
@@ -68,9 +70,15 @@ export interface IGroup {
 }
 
 export interface IMember {
+  creater: string;
   displayName: string;
   email: string;
+  groupName: string;
   photoURL: string;
+  uid: string;
+  state?: string;
+  id?: string;
+
 }
 
 

@@ -1,9 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { IInfo, IUser } from 'src/app/models/userInfo';
+import { IInfo, IUser, IGroup } from 'src/app/models/userInfo';
 import { GroupService } from 'src/app/services/group.service';
 import { StoreService } from 'src/app/services/store.service';
 import { UsersService } from 'src/app/services/users.service';
 import { SubSink } from 'subsink';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-group-info',
@@ -13,8 +14,8 @@ import { SubSink } from 'subsink';
 export class GroupInfoComponent implements OnInit, OnDestroy {
 
   private subs = new SubSink();
-  members = [];
-  currentGroup;
+  members: IUser[] = [];
+  currentGroup: IGroup;
   myInfo: IInfo;
   user: IUser;
 
@@ -25,6 +26,7 @@ export class GroupInfoComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
+    this.getMyProfile();
   }
 
   ngOnDestroy(): void {
@@ -36,8 +38,17 @@ export class GroupInfoComponent implements OnInit, OnDestroy {
     this.userService.getUser(this.myInfo.email)
       .subscribe((user: IUser[]) => {
         this.user = user[0];
+        this.currentGroup = this.groupService.currentGroup;
+
+
+        this.groupService.getGroupMembers(this.user.email, this.currentGroup.groupName)
+          .subscribe(members => {
+            this.members = members;
+          });
       });
   }
+
+
 
 
 

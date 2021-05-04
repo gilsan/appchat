@@ -32,20 +32,13 @@
     
        <mat-list>
           <mat-list-item *ngFor="let group of myGroups" >
-             <img matListAvatar [src]="group.groupPic"  class="group" (click)="openGroup(group)">
+             <img matListAvatar [src]="group.groupPic"  class="group" (click)="openGroup(group)" >
              <h3 matLine>{{group.groupName}}</h3>
-             <!-- 
-             <span matTooltip="아바타변경">
-                 <button mat-mini-fab color="primary" (click)="fileInput.click()">
-                     <mat-icon>badge</mat-icon>
-                 </button>
-             </span>
-            
-             <input #fileInput type="file" (change)="chooseImage($event,group)" style="display:none;">
-              -->
-             <button mat-icon-button (click)="removeGroup(group)">
+             
+             <button mat-icon-button (click)="removeGroup(group)" >
                 <mat-icon color="warn">delete</mat-icon>
              </button>
+             
           </mat-list-item>
        </mat-list>
   

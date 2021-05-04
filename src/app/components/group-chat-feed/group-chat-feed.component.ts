@@ -64,7 +64,7 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.getMyProfile();
     this.enteredChat();
-    // this.enterGroup();
+
   }
 
   ngOnDestroy(): void {
@@ -73,22 +73,12 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
 
   getMyProfile(): void {
     this.myInfo = this.store.getUserInfo();
-    // console.log('[GROUP CHAT]', this.myInfo);
     this.userService.getUser(this.myInfo.email)
       .subscribe((user: IUser[]) => {
         this.MyId = user[0].email;
         this.MyAvatar = user[0].photoURL;
       });
   }
-
-  // enterGroup(): void {
-  //   this.subs.sink = this.groupService.enteredGroup$.subscribe((group) => {
-  //     console.log('[GROUP CHAT][10]');
-  //     if (group) {
-  //       this.currentGroup = this.groupService.currentGroup;
-  //     }
-  //   });
-  // }
 
   enteredChat(): void {
     this.subs.sink = this.groupService.enteredGroup$.subscribe(value => {

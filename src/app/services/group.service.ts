@@ -4,7 +4,7 @@ import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/fire
 import { IGroup, IUser } from '../models/userInfo';
 import { resolveProjectReferencePath } from 'typescript';
 import { from, Observable, pipe, Subject } from 'rxjs';
-import { concatMap, filter, first, map, switchMap, take, tap } from 'rxjs/operators';
+import { concatMap, defaultIfEmpty, filter, first, map, switchMap, take, tap } from 'rxjs/operators';
 import { convertSnaps } from './firebase-util';
 import { IMember } from './../models/userInfo';
 
@@ -36,14 +36,20 @@ export class GroupService {
         groupName,
         creator: user.email,
         conversationId: '',
-        groupPic: this.groupPicDefault
-      }).then((docRef) => {
-        this.groupDocRef = docRef.id;
-        docRef.collection('members').add({
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL
-        }).then(() => {
+        groupPic: this.groupPicDefault,
+        isMyGroup: 'Y'
+      })
+        // .then((docRef) => {
+        //   this.groupDocRef = docRef.id;
+        //   docRef.collection('members').add({
+        //     email: user.email,
+        //     displayName: user.displayName,
+        //     photoURL: user.photoURL,
+        //     creater: user.email,
+        //     groupName,
+        //   })
+        .then((docRef) => {
+          this.groupDocRef = docRef.id;
           this.db.collection('groupconvos').add({
             groupName,
             creator: user.email
@@ -57,9 +63,41 @@ export class GroupService {
           });
         });
 
-      });
+      // });
     });
 
+  }
+
+
+  getGroupsByCreater(email: string): Observable<any> {
+    return this.db.collection<IGroup[]>('groups', ref => ref.where('creator', '==', email))
+      .snapshotChanges()
+      .pipe(
+        map(results => convertSnaps(results)),
+        first()
+      );
+  }
+
+  getGroupsByCreaterEmailGroup(email: string, groupname: string): Observable<any> {
+    // console.log('group ', email, groupname);
+    return this.db.collection<IGroup[]>('groups', ref => ref.where('creator', '==', email).where('groupName', '==', groupname))
+      .snapshotChanges()
+      .pipe(
+        map(results => convertSnaps(results)),
+        first(),
+        tap(group => console.log('[group SERVICE][84] ', group))
+      );
+  }
+
+  getMembersByEmail(email: string): Observable<any> {
+
+    return this.db.collectionGroup('members', ref => ref.where('email', '==', email))
+      .snapshotChanges()
+      .pipe(
+        map(results => convertSnaps(results)),
+        first(),
+        map(members => members.filter((member: IMember) => member.email === email)),
+      );
   }
 
   getGroups(email: string): Observable<IGroup[]> {
@@ -85,6 +123,16 @@ export class GroupService {
         map(snaps => snaps.docs.map(snap => snap.id)),
         switchMap(uid => this.db.doc(`groups/${uid}`).get()),
         map(snaps => snaps.data())
+      );
+  }
+
+  getGroupMembers(email: string, groupname: string): Observable<any> {
+    return this.db.collection('groups', ref => ref.where('creator', '==', email).where('groupName', '==', groupname)).get()
+      .pipe(
+        map(snaps => snaps.docs.map(snap => snap.id)),
+        switchMap(uid => this.db.doc(`groups/${uid}`).collection('members').get()),
+        map(snaps => snaps.docs.map(snap => snap.data())),
+        // map(members => members.filter(member => member.email !== email))
       );
   }
 
@@ -146,7 +194,9 @@ export class GroupService {
           email: user.email,
           photoURL: user.photoURL,
           state: user.state,
-          uid: user.uid
+          uid: user.uid,
+          groupName,
+          creater: email,
         })),
       );
   }

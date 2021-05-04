@@ -39,6 +39,10 @@ import { GroupChatFeedComponent } from './components/group-chat-feed/group-chat-
 import { MygroupComponent } from './components/mygroup/mygroup.component';
 import { AddMemberComponent } from './components/add-member/add-member.component';
 import { RemoveMemberComponent } from './components/remove-member/remove-member.component';
+import { EntityDataModule } from '@ngrx/data';
+import { entityConfig } from './entity-metadata';
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
 
 @NgModule({
   declarations: [
@@ -78,7 +82,10 @@ import { RemoveMemberComponent } from './components/remove-member/remove-member.
     AngularFirestoreModule,
     AngularFireStorageModule,
     AngularFireAuthModule,
-    MaterialModule
+    MaterialModule,
+    // EntityDataModule.forRoot(entityConfig),
+    // StoreModule.forRoot({}, {}),
+    // EffectsModule.forRoot([])
 
   ],
   providers: [],
