@@ -69,6 +69,14 @@ export interface IGroup {
   groupId: string;
 }
 
+export interface IGroupMsg {
+  isPic: boolean;
+  message: string;
+  room: string;
+  sentBy: string;
+  timestamp: string;
+}
+
 export interface IMember {
   creater: string;
   displayName: string;
@@ -83,10 +91,13 @@ export interface IMember {
 
 
 export interface INotifaction {
+  sentBy: string;
   receiver: string;
-  receiverName: string;
+  receiverName?: string;
+  room: string;
   sender: string;
   senderPic: string;
   senderName: string;
   timestamp: string;
 }
+

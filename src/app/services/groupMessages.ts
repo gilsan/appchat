@@ -10,11 +10,15 @@ import { StoreService } from './store.service';
 export class GroupMessages {
 
 
+
+
+
   constructor(
     private db: AngularFirestore,
     private storage: AngularFireStorage,
     private store: StoreService
   ) { }
+
 
 
 

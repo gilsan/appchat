@@ -1,13 +1,15 @@
 import { Injectable } from '@angular/core';
 import { AngularFireStorage } from '@angular/fire/storage';
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/firestore';
-import { IGroup, IUser } from '../models/userInfo';
-import { resolveProjectReferencePath } from 'typescript';
+
 import { from, Observable, pipe, Subject } from 'rxjs';
 import { concatMap, defaultIfEmpty, filter, first, map, switchMap, take, tap } from 'rxjs/operators';
+
+import * as firebase from 'firebase';
+
 import { convertSnaps } from './firebase-util';
 import { IMember } from './../models/userInfo';
-
+import { IGroup, IUser } from '../models/userInfo';
 
 @Injectable({
   providedIn: 'root'
@@ -67,6 +69,8 @@ export class GroupService {
     });
 
   }
+
+
 
 
   getGroupsByCreater(email: string): Observable<any> {
@@ -197,9 +201,42 @@ export class GroupService {
           uid: user.uid,
           groupName,
           creater: email,
+        }).then(() => {
+          this.addGroupNotifications(user, email, groupName);
         })),
       );
   }
+
+  // tslint:disable-next-line:adjacent-overload-signatures
+  addGroupNotifications(user: IUser, email: string, groupname: string): void {
+    this.db.collection('notifications').doc(user.uid).collection('memberof').add({
+      sentBy: email,
+      receiver: user.email,
+      room: groupname,
+      senderName: user.displayName,
+      senderPic: user.photoURL,
+      timestamp: firebase.default.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+
+  getNotifications(uid: string): Observable<any> {
+    return this.db.doc(`notifications/${uid}`).collection('memberof').get()
+      .pipe(
+        map(snaps => snaps.docs.map(snap => snap.data()))
+      );
+  }
+
+  clearNotifications(uid: string, email: string, room: string): void {
+    this.db.doc(`notifications/${uid}`)
+      .collection('memberof', ref => ref.where('receiver', '==', email)
+        .where('room', '==', room)).get().pipe(
+          map(snaps => snaps.docs.map(snap => snap.id)),
+          switchMap(id => this.db.doc(`notifications/${uid}/memberof/${id}`).delete())
+        ).subscribe();
+  }
+
+
 
   // 회원목록 가져오기
   getMembersList(email: string, groupName: string): Observable<any> {
@@ -226,7 +263,7 @@ export class GroupService {
       );
   }
 
-  // 구룹이미지 변경
+  //  
 
 
 

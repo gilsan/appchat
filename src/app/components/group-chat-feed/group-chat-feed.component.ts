@@ -5,7 +5,7 @@ import { FirestoreService } from 'src/app/services/firestore.service';
 import { SubSink } from 'subsink';
 
 
-import { IGroup, IInfo, IMsg, IUser } from './../../models/userInfo';
+import { IGroup, IGroupMsg, IInfo, IMsg, IUser } from './../../models/userInfo';
 
 import { MatDialog } from '@angular/material/dialog';
 import { LoadingSpinnerComponent } from '../loading-spinner/loading-spinner.component';
@@ -45,7 +45,7 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
   showChat: boolean;
   currentUseremail: string;
   myProfile: IUser = { displayName: '', email: '', photoURL: '', state: '', uid: '' };
-  messages: IMsg[] = [];
+  messages: IGroupMsg[] = [];
   loadingSpinner = false;
   MyId: string;
   MyAvatar: string;
@@ -85,7 +85,7 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
       this.currentGroup = this.groupService.currentGroup;
       if (value) {
         this.showChat = value;
-        // this.getMessages(this.count);
+        this.getMessages(this.count);
       } else {
         this.showChat = value;
       }
@@ -95,34 +95,35 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
   }
 
   getMessages(count): void {
+    // console.log(this.currentGroup);
+    this.subs.sink = this.messagesService.getAllGroupMessages(this.currentGroup, count)
+      .subscribe((messages) => {
+        const reverse = _.reverse(messages);
+        this.messages = reverse; // 순서를 역순으로 만듬
+        console.log('수신메세지: ', this.messages);
 
-    // this.subs.sink = this.messagesService.getMessagesAll(this.myInfo.uid, count)
-    //   .subscribe((messages) => {
-    //     const reverse = _.reverse(messages);
-    //     this.messages = reverse; // 순서를 역순으로 만듬
-    //     // console.log('수신메세지: ', this.messages);
+        if (this.messages.length === this.trackMsgCount) {
+          this.shouldLoad = false;
+        } else {
+          this.trackMsgCount = this.messages.length;
+        }
 
-    //     if (this.messages.length === this.trackMsgCount) {
-    //       this.shouldLoad = false;
-    //     } else {
-    //       this.trackMsgCount = this.messages.length;
-    //     }
+        if (this.checkFirst === 1) {
+          this.openDialog();
+          this.checkFirst += 1;
+        }
+        this.scrollDown();
 
-    //     if (this.checkFirst === 1) {
-    //       this.openDialog();
-    //       this.checkFirst += 1;
-    //     }
-    //     this.scrollDown();
-
-    //   });
+      });
   }
 
 
   getMessagesList(): void { }
 
   addMessage(type): void {
-    // this.messagesService.addNewMsg(this.newmessage, this.myInfo.uid, this.myInfo.email, type);
-    // this.newmessage = '';
+
+    this.messagesService.addGroupMsg(this.newmessage, this.currentGroup, type);
+    this.newmessage = '';
   }
 
   addMessageEvent(): void { }

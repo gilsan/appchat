@@ -1,15 +1,19 @@
 import { Injectable, OnInit, OnDestroy } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
-import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/firestore';
-import { AngularFireStorage } from '@angular/fire/storage';
 
-import { Observable, BehaviorSubject, of, from, Subject, combineLatest } from 'rxjs';
-import { concatMap, delay, distinct, filter, finalize, first, map, switchMap, take, tap, toArray } from 'rxjs/operators';
-import { IConversation, IGroup, IInfo, IMsg, INotifaction, IUser } from '../models/userInfo';
+import { AngularFireStorage } from '@angular/fire/storage';
+import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/firestore';
+
 import * as firebase from 'firebase';
 import * as _ from 'lodash';
 import { SubSink } from 'subsink';
 import { StoreService } from './store.service';
+import { GroupService } from './group.service';
+
+import { Observable, BehaviorSubject, of, from, Subject, combineLatest } from 'rxjs';
+import { concatMap, delay, distinct, filter, finalize, first, map, switchMap, take, tap, toArray } from 'rxjs/operators';
+
+import { IConversation, IGroup, IGroupMsg, IInfo, IMsg, INotifaction, IUser } from '../models/userInfo';
 
 
 
@@ -28,13 +32,18 @@ export class MessagesService implements OnDestroy {
 
   private subs = new SubSink();
   private userInfo: IInfo;
+
+  currentGroup: IGroup;
+
   constructor(
     private auth: AngularFireAuth,
     private db: AngularFirestore,
     private storage: AngularFireStorage,
-    private store: StoreService
+    private store: StoreService,
+    private groupService: GroupService
   ) {
     this.userInfo = this.store.getUserInfo();
+    this.currentGroup = this.groupService.currentGroup;
   }
 
   ngOnDestroy(): void {
@@ -276,6 +285,55 @@ export class MessagesService implements OnDestroy {
   getUploadedPicURL(uid): Observable<any> {
     return this.storage.ref(`picmessages/${uid}`).getDownloadURL();
   }
+
+  /*   Group 채팅   */
+
+  //  구릅 메세지 추가
+
+  addGroupMsg(newMessage, group: IGroup, type: string = 'txt'): void {
+    let isPic;
+    if (type === 'txt') {
+      isPic = false;
+    } else if (type === 'pic') {
+      isPic = true;
+    }
+
+    this.db.collection('groupconvos/').doc(group.conversationId).collection('messages').add({
+      message: newMessage,
+      timestamp: firebase.default.firestore.FieldValue.serverTimestamp(),
+      sentBy: group.creator,
+      room: group.groupName,
+      isPic
+    }).then(() => {
+      // this.addGroupNotifications(group);
+    });
+  }
+
+  getAllGroupMessages(group: IGroup, count: number): Observable<any> {
+    return this.db.collection('groupconvos').doc(`/${group.conversationId}`)
+      .collection('messages', ref => ref.where('room', '==', group.groupName).orderBy('timestamp', 'desc').limit(count))
+      .valueChanges();
+  }
+
+  getAllMessagesByGroup(group: string, count: number): Observable<any> {
+    return this.db.collectionGroup('messages', ref => ref.where('room', '==', group)
+      .orderBy('timestamp', 'desc').limit(count))
+      .valueChanges();
+  }
+
+  addGroupNotifications(group: IGroup): void {
+    this.db.collection('groupNotifications').add({
+      sentBy: group.creator,
+      room: group.groupName,
+      groupPic: group.groupPic,
+      timestamp: firebase.default.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  getGroupNotifications(): void {
+
+  }
+
 
 
 
