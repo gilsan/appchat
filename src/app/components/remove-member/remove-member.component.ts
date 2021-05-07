@@ -47,7 +47,7 @@ export class RemoveMemberComponent implements OnInit, OnDestroy {
 
   init(): void {
     const user$ = this.usersService.getUser(this.info.email);
-    const member$ = this.groupsService.getMembersList(this.info.email, this.info.groupname);
+    const member$ = this.groupsService.getMembersListByUid(this.info.uid, this.info.groupname);
 
     combineLatest([user$, member$]).subscribe(([user, friends]) => {
       this.currentUser = user[0];
@@ -61,9 +61,8 @@ export class RemoveMemberComponent implements OnInit, OnDestroy {
   }
 
   removeFriend(friend): void {
-    this.groupsService.removeMember(this.info.email, this.info.groupname, friend.email, this.info.uid)
+    this.groupsService.removeMemberByUid(this.currentUser.uid, friend)
       .subscribe((data) => {
-        console.log(data);
         this.snackBar.open('삭제 하였습니다...', '닫기', { duration: 3000 });
       });
   }

@@ -20,8 +20,9 @@ export class DashboardComponent implements OnInit {
 
   init(): void {
     const userinfo = this.store.getUserInfo();
-    // console.log('[DASHBOARD] ', userinfo);
+    // console.log('[DASHBOARD STORE] ', userinfo);
     this.authservice.getUserInfoByUid(userinfo.uid);
+
   }
 
 }

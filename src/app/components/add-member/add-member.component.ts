@@ -56,14 +56,16 @@ export class AddMemberComponent implements OnInit, OnDestroy {
 
   getFriends(): void {
     const friends$ = this.usersService.getAllUsers();
-    const members$ = this.groupsService.getMembersList(this.user.email, this.groupname);
-    // let tmpMembers = [];
+    // const members$ = this.groupsService.getMembersList(this.user.email, this.groupname);
+    const members$ = this.groupsService.getMembersListByUid(this.myInfo.uid, this.groupname);
+
     this.subs.sink = combineLatest([friends$, members$])
       .pipe(
         first(),
         // tap(data => console.log('회원갱신: ', data)),
       )
       .subscribe(([friends, members]) => {
+        // console.log('회원갱신:', friends, members);
         let flag = 0;
         this.myFriends = [];
         this.isMember = [];
@@ -87,11 +89,15 @@ export class AddMemberComponent implements OnInit, OnDestroy {
 
   }
 
-  addFriend(user): void {
-    this.groupsService.addMember(user, this.user.email, this.groupname).subscribe(data => {
-      // console.log('회원추가: ', data.id);
-      this.getFriends();
-    });
+  addFriend(friend): void {
+    // this.groupsService.addMember(friend, this.user.email, this.groupname).subscribe(data => {
+    //   this.getFriends();
+    // });
+
+    this.groupsService.addMemberByUid(friend, this.myInfo, this.groupname)
+      .subscribe(data => {
+        this.getFriends();
+      });
   }
 
 }

@@ -30,9 +30,13 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   init(): void {
     this.groupService.getNotifications(this.myInfo.uid)
       .subscribe((noti: any) => {
+        // console.log(noti);
         if (noti.length > 0) {
           this.myNotifications = noti;
           this.showNotifications = true;
+        } else {
+          this.myNotifications = [];
+          this.showNotifications = false;
         }
 
       });
@@ -42,10 +46,31 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     this.subs.unsubscribe();
   }
 
-  accept() {
+  accept(msg): void {
+
+    this.groupService.getRoomInfo(msg).subscribe(data => {
+      this.groupService.removeNotification(msg)
+        .then(() => {
+          this.init();
+        });
+    });
+
+    // this.groupService.getFindGroupByRoomCreater(msg.room, msg.sentBy)
+    //   .subscribe(() => {
+    //     this.groupService.clearNotifications(this.myInfo.uid, this.myInfo.email, msg.room)
+    //       .subscribe((data) => {
+    //         console.log('[ACCEPT1] ', data);
+    //         this.init();
+    //       });
+    //   });
 
   }
 
-  cancel() { }
+  delete(msg): void {
+    this.groupService.removeNotification(msg)
+      .then(() => {
+        this.init();
+      });
+  }
 
 }

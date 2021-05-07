@@ -72,7 +72,8 @@ export class UsersService implements OnDestroy {
   getAllUsers(): Observable<any> {
     return this.db.collection('users', ref => ref.orderBy('email')).valueChanges()
       .pipe(
-        map(users => users.filter((user: IUser) => user.email !== this.user.email))
+        map(users => users.filter((user: IUser) => user.email !== this.user.email)),
+        // tap(user => console.log('user: ', user))
       );
   }
 

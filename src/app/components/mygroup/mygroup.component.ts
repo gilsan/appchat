@@ -35,10 +35,48 @@ export class MygroupComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.getMyProfile();
+    this.notificationGroup();
   }
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
+  }
+
+  //
+  notificationGroup(): void {
+    this.groupService.newGroupOb$.subscribe((newGroup: IGroup) => {
+      // 
+      this.groupService.duplicationCheck(newGroup.groupName, this.user)
+        .subscribe(empty => {
+          console.log('[MYGROUP][48] ', empty);
+          if (empty) {
+            this.groupService.createGroup(newGroup.groupName, this.user)
+              .then(() => {
+                this.userService.getUser(newGroup.creator)
+                  .pipe(
+                    switchMap(friend => this.groupService.addMemberByUid(friend[0], this.myInfo, newGroup.groupName))
+                  )
+                  .subscribe(() => {
+                    this.getGroups();
+                  });
+              });
+          } else {
+            this.userService.getUser(newGroup.creator)
+              .pipe(
+                switchMap(friend => this.groupService.addMemberByUid(friend[0], this.myInfo, newGroup.groupName))
+              )
+              .subscribe(() => {
+                this.getGroups();
+              });
+          }
+        });
+
+      // this.myGroups.push(newGroup);
+      // this.groupService.addMember(this.user, newGroup.creator, newGroup.groupName);
+      // this.groupService.addMemberByUid(friend: IUser, this.myInfo, newGroup.groupName)
+
+
+    });
   }
 
   getMyProfile(): void {
@@ -51,30 +89,42 @@ export class MygroupComponent implements OnInit, OnDestroy {
   }
 
   createGroup(): void {
-    this.groupService.createGroup(this.groupName, this.user)
-      .then(() => {
-        this.snackBar.open('구룹 생성 했습니다.', '닫기', { duration: 3000 });
-        this.getGroups();
-        this.addGroup();
-      });
+    this.groupService.duplicationCheck(this.groupName, this.user).subscribe(isDuplicate => {
+      // console.log('[MYGROUP]', isDuplicate);
+      if (isDuplicate) {
+        this.groupService.createGroup(this.groupName, this.user)
+          .then(() => {
+            this.snackBar.open('구룹 생성 했습니다.', '닫기', { duration: 3000 });
+            this.getGroups();
+            this.addGroup();
+            this.groupName = '';
+          });
+      } else {
+        this.snackBar.open('구룹이 존재 합니다..', '닫기', { duration: 3000 });
+      }
+    });
+
   }
 
   getGroups(): void {
-    this.subs.sink = this.groupService.getGroups(this.user.email)
+    // this.subs.sink = this.groupService.getGroups(this.user.email)
+    //   .subscribe(groups => {
+    //     console.log('[MYGROUP]', groups);
+    //     this.myGroups = groups;
+    //   });
+
+    this.subs.sink = this.groupService.getGroupsByUid(this.user.uid)
       .subscribe(groups => {
         this.myGroups = groups;
       });
 
-    // const groupLists$ = this.groupService.getGroupsByCreater(this.user.email);
-    // groupLists$
-    //   .pipe(
-    //     tap(groups => this.myGroups = groups),
-    //     switchMap(() => this.groupService.getMembersByEmail(this.user.email)),
-    //     switchMap(lists => from(lists)),
-    //     switchMap((list: IMember) => this.groupService.getGroupsByCreaterEmailGroup(list.creater, list.groupName)),
-    //     tap(group => this.myGroups.push({ ...group[0], isMyGroup: 'N' }))
-    //   )
-    //   .subscribe();
+    // const group$ = this.groupService.getGroupsByUid(this.user.uid);
+    // const members$ = this.groupService.getGroupsMembers(this.user.uid);
+
+    // this.subs.sink = combineLatest(([group$, members$]))
+    //   .subscribe(([groups, members]) => {
+    //     console.log('[MYGROUP]', groups);
+    //   });
   }
 
 
@@ -93,7 +143,6 @@ export class MygroupComponent implements OnInit, OnDestroy {
   refreshList(): void { }
 
   openGroup(group): void {
-
     this.groupService.enterGroup(group);
     this.messagesService.enterChat('closed');
 

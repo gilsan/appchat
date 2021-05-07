@@ -100,7 +100,7 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
       .subscribe((messages) => {
         const reverse = _.reverse(messages);
         this.messages = reverse; // 순서를 역순으로 만듬
-        console.log('수신메세지: ', this.messages);
+        // console.log('수신메세지: ', this.messages);
 
         if (this.messages.length === this.trackMsgCount) {
           this.shouldLoad = false;

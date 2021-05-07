@@ -1,11 +1,11 @@
 <mat-list *ngIf="showNotifications">
  <mat-list-item *ngFor="let msg of myNotifications; let i = index">
-   <img matListAvatar [src]="msg.senderPic">
-   <h3 matLine>{{msg.senderName}}님 {{msg.room}} 방 초청 </h3>
+   <img matListAvatar [src]="msg.receiverPic">
+   <h3 matLine>{{msg.receiverName}}님 {{msg.room}} 방 초청 </h3>
     <button mat-icon-button  (click)="accept(msg)">
        <mat-icon color="primary">check</mat-icon>
      </button>
-     <button mat-icon-button (click)="cancel(msg)">
+     <button mat-icon-button (click)="delete(msg)">
        <mat-icon color="warn">delete</mat-icon>
      </button>
  </mat-list-item>

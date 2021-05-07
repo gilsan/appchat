@@ -8,7 +8,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { AddMemberComponent } from '../add-member/add-member.component';
 import { GroupInfoComponent } from './../group-info/group-info.component';
 import { RemoveMemberComponent } from '../remove-member/remove-member.component';
-import { shareReplay, switchMap, tap } from 'rxjs/operators';
+import { concatMap, shareReplay, switchMap, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-group-menu',
@@ -97,22 +97,34 @@ export class GroupMenuComponent implements OnInit, OnDestroy {
   onFileInput(evt): void {
     this.selectedFiles = evt.target.files;
     if (this.selectedFiles.item(0)) {
-      const updatePic$ = this.groupService.getGroupUid(this.myInfo.email, this.currentGroup.groupName)
+      //
+      this.subs.sink = this.groupService.uploadProfilePic(this.selectedFiles.item(0),
+        this.currentGroup.groupId, this.currentGroup.uid)
         .pipe(
-          switchMap(uid => this.groupService.uploadProfilePic(this.selectedFiles.item(0), uid, this.myInfo.email)),
-          shareReplay()
-        );
+          switchMap(() => this.groupService.getGroupsByUid(this.currentGroup.uid))
+        )
+        .subscribe((data) => {
+          this.currentGroup = this.groupService.currentGroup;
+          // this.currentGroup = data[0];
+          console.log('[onFileInput][108]', this.currentGroup);
+        });
 
-      this.subs.sink = updatePic$.subscribe(data => {
-        // console.log(data);
-      });
+      // const updatePic$ = this.groupService.getGroupUid(this.myInfo.email, this.currentGroup.groupName)
+      //   .pipe(
+      //     switchMap(uid => this.groupService.uploadProfilePic(this.selectedFiles.item(0), uid, this.myInfo.email)),
+      //     shareReplay()
+      //   );
 
-      this.subs.sink = updatePic$.pipe(
-        tap(uid => console.log(uid)),
-        switchMap(uid => this.groupService.getGroupByEmail(this.myInfo.email, this.currentGroup.groupName))
-      ).subscribe((data) => {
-        this.currentGroup = data;
-      });
+      // this.subs.sink = updatePic$.subscribe(data => {
+
+      // });
+
+      // this.subs.sink = updatePic$.pipe(
+      //   tap(uid => console.log(uid)),
+      //   switchMap(uid => this.groupService.getGroupByEmail(this.myInfo.email, this.currentGroup.groupName))
+      // ).subscribe((data) => {
+      //   this.currentGroup = data;
+      // });
     }
   }
 

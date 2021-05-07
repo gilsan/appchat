@@ -64,9 +64,11 @@ export interface IMsg {
 export interface IGroup {
   conversationId: string;
   creator: string;
+  displayName: string;
   groupName: string;
   groupPic: string;
   groupId: string;
+  uid: string;
 }
 
 export interface IGroupMsg {
@@ -91,13 +93,15 @@ export interface IMember {
 
 
 export interface INotifaction {
-  sentBy: string;
+  groupId: string;
+  memberofUid: string;
   receiver: string;
-  receiverName?: string;
+  receiverName: string;
+  receiverPic: string;
+  receiverUid: string;
   room: string;
-  sender: string;
-  senderPic: string;
-  senderName: string;
+  senderUid: string;
+  sentBy: string;
   timestamp: string;
 }
 
