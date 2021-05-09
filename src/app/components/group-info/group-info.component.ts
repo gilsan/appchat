@@ -39,9 +39,7 @@ export class GroupInfoComponent implements OnInit, OnDestroy {
       .subscribe((user: IUser[]) => {
         this.user = user[0];
         this.currentGroup = this.groupService.currentGroup;
-
-
-        this.groupService.getGroupMembers(this.user.email, this.currentGroup.groupName)
+        this.groupService.getGroupMembersByUid(this.user.uid, this.currentGroup.groupName)
           .subscribe(members => {
             this.members = members;
           });

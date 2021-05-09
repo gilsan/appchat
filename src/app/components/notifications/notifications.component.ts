@@ -46,24 +46,26 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     this.subs.unsubscribe();
   }
 
-  accept(msg): void {
+  accept2(msg): void {
+    // console.log('[초대수락 시작][getRoomInfo][], ');
+    // this.groupService.getRoomInfo(msg).subscribe(data => {
+    //   console.log('[초대수락][getRoomInfo][1], ', data);
+    //   this.groupService.removeNotification(msg)
+    //     .then(() => {
+    //       this.init();
+    //     });
+    // });
+  }
 
-    this.groupService.getRoomInfo(msg).subscribe(data => {
+  accept(msg): void {
+    console.log('[초대수락 시작][getRoomInfo][], ');
+    this.groupService.getRoomInfo(msg).then((group) => {
+      console.log('[초대수락][getRoomInfo][1], ', group);
       this.groupService.removeNotification(msg)
         .then(() => {
           this.init();
         });
     });
-
-    // this.groupService.getFindGroupByRoomCreater(msg.room, msg.sentBy)
-    //   .subscribe(() => {
-    //     this.groupService.clearNotifications(this.myInfo.uid, this.myInfo.email, msg.room)
-    //       .subscribe((data) => {
-    //         console.log('[ACCEPT1] ', data);
-    //         this.init();
-    //       });
-    //   });
-
   }
 
   delete(msg): void {

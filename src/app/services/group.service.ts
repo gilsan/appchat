@@ -36,6 +36,7 @@ export class GroupService {
 
   // 처음 구룹생성
   createGroup(groupName: string, user: IUser): Promise<any> {
+    console.log('[구룹생성][] ', groupName);
     return new Promise((resolve) => {
       this.db.doc(`groups/${user.uid}`).collection('group').add({
         groupName,
@@ -45,34 +46,45 @@ export class GroupService {
         uid: user.uid,
         displayName: user.displayName,
         isMyGroup: 'Y',
-      }).then((docRef) => {
-        this.groupDocRef = docRef.id;
-        this.db.doc(`groupconvos/${user.uid}`).collection('group').add({
-          groupName,
-          creator: user.email
-        }).then((docref) => {
-          this.db.doc(`groups/${user.uid}`).collection('group').doc(this.groupDocRef).update({
-            conversationId: docref.id,
-            groupId: this.groupDocRef
-          }).then(() => {
-            resolve('');
-          });
+      }).then((docref) => {
+        this.db.doc(`groups/${user.uid}`).collection('group').doc(docref.id).update({
+          groupId: docref.id
+        }).then(() => {
+          resolve('');
         });
       });
+      // .then((docRef) => {
+      //   this.groupDocRef = docRef.id;
+      //   this.db.doc(`groupconvos/${user.uid}`).collection('group').add({
+      //     groupName,
+      //     creator: user.email
+      //   }).then((docref) => {
+      //     this.db.doc(`groups/${user.uid}`).collection('group').doc(this.groupDocRef).update({
+      //       conversationId: docref.id,
+      //       groupId: this.groupDocRef
+      //     }).then(() => {
+      //       resolve('');
+      //     });
+      //   });
+      // });
     });
   }
 
 
 
   // group 중복 검사
-  duplicationCheck(groupName: string, user: IUser): Observable<any> {
-    return this.db.doc(`groups/${user.uid}`).collection('group', ref => ref.where('groupName', '==', groupName))
-      .get()
-      .pipe(
-        map(snaps => snaps.empty),
-        last(),
-        // tap(data => console.log('중복 검사', data))
-      );
+  duplicationCheck(groupName: string, user: IUser): Promise<any> {
+    console.log('중복검사');
+    const collRef = this.db.doc(`groups/${user.uid}`).collection('group').ref;
+    const queryRef = collRef.where('groupName', '==', groupName).get();
+    return queryRef;
+    // return this.db.doc(`groups/${user.uid}`).collection('group', ref => ref.where('groupName', '==', groupName))
+    //   .get()
+    //   .pipe(
+    //     map(snaps => snaps.empty),
+    //     last(),
+
+    //   );
 
   }
 
@@ -153,7 +165,6 @@ export class GroupService {
     return this.db.doc<IGroup[]>(`groups/${uid}`).collection('group').get()
       .pipe(
         map(snaps => snaps.docs.map(snap => snap.data())),
-        tap(data => console.log('[current GROUP][156] ', data))
       );
   }
 
@@ -214,6 +225,16 @@ export class GroupService {
       );
   }
 
+  getGroupMembersByUid(uid: string, groupname: string): Observable<any> {
+    return this.db.doc(`groups/${uid}`).collection('group').get()
+      .pipe(
+        map(snaps => snaps.docs.map(snap => snap.id)),
+        switchMap(id => this.db.doc(`groups/${uid}`)
+          .collection('group').doc(`${id}`).collection('members', ref => ref.where('groupName', '==', groupname)).get()),
+        map(snaps => snaps.docs.map(snap => snap.data())),
+      );
+  }
+
   enterGroup(group): void {
     if (group !== 'closed') {
       this.currentGroup = group;
@@ -258,6 +279,7 @@ export class GroupService {
         map(snaps => snaps.docs.map(snap => snap.data())),
         tap((data: IGroup[]) => this.currentGroup = data[0])
       ).subscribe(() => {
+        console.log('[그림갱신][newGroup$]');
         this.newGroup$.next(this.currentGroup);
         this.enteredGroup.next(true);
       });
@@ -334,8 +356,29 @@ export class GroupService {
       );
   }
 
-  addNewMember(myInfo: IInfo, notify: INotifaction) {
-    // this.db.collection(`groups/${myInfo.uid}/group`)
+  addNotiMemberByUid(friend: IUser, myinfo: IInfo, groupName: string): Observable<any> {
+    console.log('[40][NOTI][멤버버생성][354]');
+    return this.db.doc(`groups/${myinfo.uid}`)
+      .collection('group', ref => ref.where('groupName', '==', groupName)).get()
+      .pipe(
+        map(snaps => snaps.docs.map(snap => snap.id)),
+        switchMap(uid => this.db.doc(`groups/${myinfo.uid}/group/${uid}`).collection('members').add({
+          creater: myinfo.email,
+          displayName: friend.displayName,
+          groupName,
+          isMyGroup: 'N',
+          uid: friend.uid,
+          photoURL: friend.photoURL,
+          email: friend.email,
+          createrUid: myinfo.uid,
+          timestamp: firebase.default.firestore.FieldValue.serverTimestamp()
+        }).then((docRef) => {
+          console.log('[50][NOTI][멤버생성][370]');
+          this.db.doc(`groups/${myinfo.uid}/group/${uid}`).collection('members').doc(docRef.id).update({
+            membersUid: docRef.id
+          });
+        }))
+      );
   }
 
   // tslint:disable-next-line:adjacent-overload-signatures
@@ -363,7 +406,7 @@ export class GroupService {
     return this.db.doc(`notifications/${uid}`).collection('memberof').get()
       .pipe(
         map(snaps => snaps.docs.map(snap => snap.data())),
-        // tap(data => console.log('회원: ', data)),
+        tap(data => console.log('[getNotifications][회원:] ', data)),
       );
   }
 
@@ -381,6 +424,7 @@ export class GroupService {
   }
 
   removeNotification(notiInfo: INotifaction): Promise<any> {
+    console.log('[Nofi 삭제][419]', notiInfo.receiverUid, notiInfo.memberofUid);
     return this.db.doc(`notifications/${notiInfo.receiverUid}/memberof/${notiInfo.memberofUid}`).delete();
   }
 
@@ -449,17 +493,34 @@ export class GroupService {
       );
   }
 
-  getRoomInfo(notiInfo: INotifaction): Observable<any> {
+  getRoomInfo2(notiInfo: INotifaction): Observable<any> {
+    console.log('[496][getRoomInfo][2] ==>', notiInfo);
     return this.db.doc(`groups/${notiInfo.senderUid}`).collection('group', ref => ref.where('groupId', '==', notiInfo.groupId)).get()
       .pipe(
         map(snaps => snaps.docs.map(snap => snap.data())),
         map((group) => {
+          console.log('[498][두번째 방정보찿는다][getRoomInfo] ====>[로 이동 newGroup$][2] ==>', group);
           group[0].isMyGroup = 'N';
           return group;
         }),
+        take(1),
         tap(group => this.newGroup$.next(group[0]))
       );
 
+  }
+
+  getRoomInfo(notiInfo: INotifaction): Promise<any> {
+    const collRef = this.db.doc(`groups/${notiInfo.senderUid}`).collection('group').ref;
+    const queryRef = collRef.where('groupId', '==', notiInfo.groupId).get();
+    return new Promise((resolve) => {
+      queryRef.then((snaps) => {
+        if (!snaps.empty) {
+          const group = snaps.docs.map(snap => snap.data());
+          this.newGroup$.next(group[0]);
+          resolve(snaps.docs.map(snap => snap.data()));
+        }
+      });
+    });
   }
 
 

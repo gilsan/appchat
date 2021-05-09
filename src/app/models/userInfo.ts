@@ -62,7 +62,7 @@ export interface IMsg {
 }
 
 export interface IGroup {
-  conversationId: string;
+  conversationId?: string;
   creator: string;
   displayName: string;
   groupName: string;

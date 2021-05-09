@@ -105,26 +105,8 @@ export class GroupMenuComponent implements OnInit, OnDestroy {
         )
         .subscribe((data) => {
           this.currentGroup = this.groupService.currentGroup;
-          // this.currentGroup = data[0];
-          console.log('[onFileInput][108]', this.currentGroup);
         });
 
-      // const updatePic$ = this.groupService.getGroupUid(this.myInfo.email, this.currentGroup.groupName)
-      //   .pipe(
-      //     switchMap(uid => this.groupService.uploadProfilePic(this.selectedFiles.item(0), uid, this.myInfo.email)),
-      //     shareReplay()
-      //   );
-
-      // this.subs.sink = updatePic$.subscribe(data => {
-
-      // });
-
-      // this.subs.sink = updatePic$.pipe(
-      //   tap(uid => console.log(uid)),
-      //   switchMap(uid => this.groupService.getGroupByEmail(this.myInfo.email, this.currentGroup.groupName))
-      // ).subscribe((data) => {
-      //   this.currentGroup = data;
-      // });
     }
   }
 
