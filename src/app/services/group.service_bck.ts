@@ -11,7 +11,6 @@ import { convertSnaps } from './firebase-util';
 import { IInfo, IMember, INotifaction } from '../models/userInfo';
 import { IGroup, IUser } from '../models/userInfo';
 
-
 @Injectable({
   providedIn: 'root'
 })
@@ -33,6 +32,7 @@ export class GroupService {
     private db: AngularFirestore,
     private storage: AngularFireStorage
   ) { }
+
 
   // 처음 구룹생성
   createGroup(groupName: string, user: IUser): Promise<any> {
@@ -361,7 +361,31 @@ export class GroupService {
 
 
 
-
+  addMemberByUid(friend: IUser, myinfo: IInfo, groupName: string): Observable<any> {
+    let groupID;
+    return this.db.doc(`groups/${myinfo.uid}`)
+      .collection('group', ref => ref.where('groupName', '==', groupName)).get()
+      .pipe(
+        map(snaps => snaps.docs.map(snap => snap.id)),
+        tap(uid => groupID = uid[0]),
+        switchMap(uid => this.db.doc(`groups/${myinfo.uid}/group/${uid}`).collection('members').add({
+          creater: myinfo.email,
+          displayName: friend.displayName,
+          groupName,
+          isMyGroup: 'N',
+          uid: friend.uid,
+          photoURL: friend.photoURL,
+          email: friend.email,
+          createrUid: myinfo.uid,
+          timestamp: firebase.default.firestore.FieldValue.serverTimestamp()
+        }).then((docRef) => {
+          this.db.doc(`groups/${myinfo.uid}/group/${uid}`).collection('members').doc(docRef.id).update({
+            membersUid: docRef.id
+          });
+          this.addGroupNotifications(friend, myinfo, groupName, groupID);
+        }))
+      );
+  }
 
   addNotiMemberByUid(friend: IUser, myinfo: IInfo, groupName: string): Observable<any> {
     console.log('[40][NOTI][멤버버생성][354]');
@@ -436,120 +460,27 @@ export class GroupService {
   }
 
   // 회원목록 가져오기
-  // getMembersList(email: string, groupName: string): Observable<any> {
-  //   return this.db.collection(`groups`, ref => ref.where('creater', '==', email).where('groupName', '==', groupName)).get()
-  //     .pipe(
-  //       map(snaps => snaps.docs.map(snap => snap.id)),
-  //       switchMap((uid) => this.db.doc(`groups/${uid}`).collection('members').snapshotChanges()),
-  //       map(result => convertSnaps(result)),
-  //       map(members => members.filter((member: IMember) => member.email !== email))
-  //     );
-  // }
+  getMembersList(email: string, groupName: string): Observable<any> {
+    return this.db.collection(`groups`, ref => ref.where('creater', '==', email).where('groupName', '==', groupName)).get()
+      .pipe(
+        map(snaps => snaps.docs.map(snap => snap.id)),
+        switchMap((uid) => this.db.doc(`groups/${uid}`).collection('members').snapshotChanges()),
+        map(result => convertSnaps(result)),
+        map(members => members.filter((member: IMember) => member.email !== email))
+      );
+  }
 
   getMembersListByUid(uid: string, groupName: string): Observable<any> {
     return this.db.doc(`groups/${uid}`).collection('group', ref => ref.where('groupName', '==', groupName)).get()
       .pipe(
         map(snaps => snaps.docs.map(snap => snap.id)),
         switchMap((id) => this.db.doc(`groups/${uid}/group/${id[0]}`).collection('members').snapshotChanges()),
+        // filter(data => data.length > 0),
         map(results => convertSnaps(results)),
         first(),
+        // tap(data => console.log('[MEMBER] ', data))
       );
   }
-
-  getMembersListStore(groupId: string, groupName: string, myemail: string): Observable<any> {
-    return this.db.doc(`groupstore/${groupId}`)
-      .collection('memberof', ref => ref.where('groupName', '==', groupName))
-      .get()
-      .pipe(
-        map(snaps => snaps.docs.map(snap => snap.data())),
-        map(members => members.filter(group => group.email !== myemail))
-      );
-  }
-
-  getMembersStore(uid: string, email: string, friendUid: string = ''): Observable<any> {
-    return this.db.doc(`groupstore/${uid}`).collection('memberof').get()
-      .pipe(
-        map(snaps => snaps.docs.map(snap => snap.data())),
-        map(groups => groups.filter(group => group.email !== email))
-      );
-  }
-
-  getGroupId(uid: string, groupName: string): Promise<any> {
-    const collRef = this.db.doc(`groups/${uid}`).collection('group').ref;
-    const queryRef = collRef.where('groupName', '==', groupName).get();
-
-    return new Promise((resolve) => {
-      queryRef.then((snapShot) => {
-        if (snapShot.empty) {
-          resolve('none');
-        } else {
-          resolve(snapShot.docs.map((snap) => snap.data()));
-        }
-      });
-    });
-  }
-
-  getIdOfGroup(uid: string): Observable<any> {
-    return this.db.doc(`groups/${uid}`).collection('group').get()
-      .pipe(
-        map(snaps => snaps.docs.map(snap => snap.data())),
-        map(groups => groups.map(group => group.groupId)),
-        map(id => id[0])
-      );
-  }
-
-  addMemberByGroupId(groupId: string, friend: IUser, myinfo: IInfo, groupName: string): Promise<any> {
-    return new Promise((resolve) => {
-      this.db.doc(`groupstore/${groupId}`).collection('memberof').add({
-        creater: myinfo.email,
-        displayName: friend.displayName,
-        groupName,
-        isMyGroup: 'N',
-        uid: friend.uid,
-        photoURL: friend.photoURL,
-        email: friend.email,
-        createrUid: myinfo.uid,
-        timestamp: firebase.default.firestore.FieldValue.serverTimestamp()
-      }).then((docRef) => {
-        this.db.doc(`groupstore/${groupId}`).collection('memberof').doc(docRef.id).update({
-          membersUid: docRef.id
-        }).then(() => {
-          this.addGroupNotifications(friend, myinfo, groupName, groupId);
-          resolve('');
-        });
-      });
-    });
-
-
-  }
-
-  // addMemberByUid(friend: IUser, myinfo: IInfo, groupName: string): Observable<any> {
-  //   let groupID;
-  //   return this.db.doc(`groups/${myinfo.uid}`)
-  //     .collection('group', ref => ref.where('groupName', '==', groupName)).get()
-  //     .pipe(
-  //       map(snaps => snaps.docs.map(snap => snap.id)),
-  //       tap(uid => groupID = uid[0]),
-  //       switchMap(uid => this.db.doc(`groups/${myinfo.uid}/group/${uid}`).collection('members').add({
-  //         creater: myinfo.email,
-  //         displayName: friend.displayName,
-  //         groupName,
-  //         isMyGroup: 'N',
-  //         uid: friend.uid,
-  //         photoURL: friend.photoURL,
-  //         email: friend.email,
-  //         createrUid: myinfo.uid,
-  //         timestamp: firebase.default.firestore.FieldValue.serverTimestamp()
-  //       }).then((docRef) => {
-  //         this.db.doc(`groups/${myinfo.uid}/group/${uid}`).collection('members').doc(docRef.id).update({
-  //           membersUid: docRef.id
-  //         });
-  //         this.addGroupNotifications(friend, myinfo, groupName, groupID);
-  //       }))
-  //     );
-  // }
-
-
 
 
   // 회원삭제

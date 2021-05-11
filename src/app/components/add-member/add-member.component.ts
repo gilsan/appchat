@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { combineLatest } from 'rxjs';
-import { first, last, tap } from 'rxjs/operators';
+import { first, last, switchMap, tap } from 'rxjs/operators';
 import * as _ from 'lodash';
 
 import { SubSink } from 'subsink';
@@ -54,10 +54,15 @@ export class AddMemberComponent implements OnInit, OnDestroy {
       });
   }
 
+
   getFriends(): void {
     const friends$ = this.usersService.getAllUsers();
-    // const members$ = this.groupsService.getMembersList(this.user.email, this.groupname);
-    const members$ = this.groupsService.getMembersListByUid(this.myInfo.uid, this.groupname);
+    // const members$ = this.groupsService.getMembersListByUid(this.myInfo.uid, this.groupname);
+    const members$ = this.groupsService.getIdOfGroup(this.myInfo.uid)
+      .pipe(
+        tap(data => console.log('구룹ID: ', data)),
+        switchMap(uid => this.groupsService.getMembersStore(uid, this.myInfo.email))
+      );
 
     this.subs.sink = combineLatest([friends$, members$])
       .pipe(
@@ -65,7 +70,7 @@ export class AddMemberComponent implements OnInit, OnDestroy {
         // tap(data => console.log('회원갱신: ', data)),
       )
       .subscribe(([friends, members]) => {
-        // console.log('회원갱신:', friends, members);
+        console.log('회원갱신:', friends, members);
         let flag = 0;
         this.myFriends = [];
         this.isMember = [];
@@ -86,18 +91,55 @@ export class AddMemberComponent implements OnInit, OnDestroy {
           }
         });
       });
-
   }
 
-  addFriend(friend): void {
-    // this.groupsService.addMember(friend, this.user.email, this.groupname).subscribe(data => {
-    //   this.getFriends();
-    // });
+  addFriend(friend: IUser): void {
+    this.groupsService.getGroupId(this.myInfo.uid, this.groupname)
+      .then((result) => {
+        if (result !== 'none') {
+          console.log(' 멤버 추가:', result);
+          this.groupsService.addMemberByGroupId(result[0].groupId, friend, this.myInfo, result[0].groupName)
+            .then(() => {
+              this.getAddedFriends(friend.uid);
+            });
 
-    this.groupsService.addMemberByUid(friend, this.myInfo, this.groupname)
-      .subscribe(data => {
-        this.getFriends();
+        }
       });
   }
+
+  getAddedFriends(friendUid: string): void {
+    const friends$ = this.usersService.getAllUsers();
+    const members$ = this.groupsService.getMembersStore(this.myInfo.uid, friendUid, this.myInfo.email);
+
+    this.subs.sink = combineLatest([friends$, members$])
+      .pipe(
+        first(),
+        // tap(data => console.log('회원갱신: ', data)),
+      )
+      .subscribe(([friends, members]) => {
+        console.log('회원갱신:', members);
+        let flag = 0;
+        this.myFriends = [];
+        this.isMember = [];
+        friends.forEach((element, i) => {
+          this.myFriends.push(element);
+          members.forEach((el) => {
+            if (element.email === el.email) {
+              flag += 1;
+            }
+          });
+
+          if (flag > 0) {
+            this.isMember[i] = true;
+            flag = 0;
+          } else {
+            this.isMember[i] = false;
+            flag = 0;
+          }
+        });
+      });
+  }
+
+
 
 }

@@ -4,7 +4,7 @@
          style="border-radius:50%">
        <h3>구룹별명: {{currentGroup.groupName}}</h3>
 
-       <div fxLayout="row" fxLayoutAlign="center">
+       <div fxLayout="row" fxLayoutAlign="center" *ngIf="currentGroup.iMakeGroup === 'Y'">
            <span matTooltip="멤버추가" *ngIf="isOwner" (click)="addMember()">
                <button mat-mini-fab color="primary">
                     <mat-icon>add_circle</mat-icon>
@@ -36,6 +36,14 @@
                </button>
             </span>            
             -->
+        </div>
+        
+        <div fxLayout="row" fxLayoutAlign="center" (click)="memberList()" *ngIf="currentGroup.iMakeGroup === 'N'">
+            <span matTooltip="구룹원">
+               <button mat-mini-fab color="primary" >
+                     <mat-icon>groups</mat-icon>
+               </button>
+            </span>  
         </div>
    </div>
 </div>

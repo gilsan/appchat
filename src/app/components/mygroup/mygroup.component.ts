@@ -47,31 +47,18 @@ export class MygroupComponent implements OnInit, OnDestroy {
     this.groupService.newGroupOb$
       .pipe(
         first(),
+        tap((data) => console.log('[MY GROUP]', data))
       )
       .subscribe((newGroup: IGroup) => {
+        console.log('[MY GROUP][53] ', newGroup);
         this.groupService.duplicationCheck(newGroup.groupName, this.user)
           .then((snapShot) => {
             if (snapShot.empty) {
-              this.groupService.createGroup(newGroup.groupName, this.user)
+              this.groupService.addNewGroup(newGroup.groupName, this.user, newGroup.groupId)
                 .then(() => {
-                  this.userService.getUser(newGroup.creator)
-                    .pipe(
-                      switchMap(friend => this.groupService.addNotiMemberByUid(friend[0], this.myInfo, newGroup.groupName))
-                    )
-                    .subscribe(() => {
-                      this.getGroups();
-                    });
+                  this.getGroups();
                 });
             }
-            // else {
-            //   this.userService.getUser(newGroup.creator)
-            //     .pipe(
-            //       switchMap(friend => this.groupService.addNotiMemberByUid(friend[0], this.myInfo, newGroup.groupName))
-            //     )
-            //     .subscribe(() => {
-            //       this.getGroups();
-            //     });
-            // }
           });
 
 
@@ -125,7 +112,9 @@ export class MygroupComponent implements OnInit, OnDestroy {
   addGroup(): void {
     this.showAdd = !this.showAdd;
   }
-  refreshList(): void { }
+  refreshList(): void {
+    this.getGroups();
+  }
 
   openGroup(group): void {
     this.groupService.enterGroup(group);

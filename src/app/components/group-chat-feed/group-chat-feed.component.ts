@@ -96,25 +96,25 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
 
   getMessages(count): void {
     // console.log(this.currentGroup);
-    this.subs.sink = this.messagesService.getAllGroupMessages(this.currentGroup, count)
-      .subscribe((messages) => {
-        const reverse = _.reverse(messages);
-        this.messages = reverse; // 순서를 역순으로 만듬
-        // console.log('수신메세지: ', this.messages);
+    // this.subs.sink = this.messagesService.getAllGroupMessages(this.currentGroup, count)
+    //   .subscribe((messages) => {
+    //     const reverse = _.reverse(messages);
+    //     this.messages = reverse; // 순서를 역순으로 만듬
 
-        if (this.messages.length === this.trackMsgCount) {
-          this.shouldLoad = false;
-        } else {
-          this.trackMsgCount = this.messages.length;
-        }
 
-        if (this.checkFirst === 1) {
-          this.openDialog();
-          this.checkFirst += 1;
-        }
-        this.scrollDown();
+    //     if (this.messages.length === this.trackMsgCount) {
+    //       this.shouldLoad = false;
+    //     } else {
+    //       this.trackMsgCount = this.messages.length;
+    //     }
 
-      });
+    //     if (this.checkFirst === 1) {
+    //       this.openDialog();
+    //       this.checkFirst += 1;
+    //     }
+    //     this.scrollDown();
+
+    //   });
   }
 
 
@@ -122,8 +122,8 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
 
   addMessage(type): void {
 
-    this.messagesService.addGroupMsg(this.newmessage, this.currentGroup, type);
-    this.newmessage = '';
+    // this.messagesService.addGroupMsg(this.newmessage, this.currentGroup, type);
+    // this.newmessage = '';
   }
 
   addMessageEvent(): void { }

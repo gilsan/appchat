@@ -9,15 +9,15 @@ import { GroupService } from 'src/app/services/group.service';
 import { StoreService } from 'src/app/services/store.service';
 import { UsersService } from 'src/app/services/users.service';
 
-import { IUser } from 'src/app/models/userInfo';
+import { IInfo, IUser } from 'src/app/models/userInfo';
 import { combineLatest } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 export interface DialogData {
   email: string;
   groupname: string;
   uid: string;
 }
-
 
 @Component({
   selector: 'app-remove-member',
@@ -39,15 +39,23 @@ export class RemoveMemberComponent implements OnInit, OnDestroy {
   private subs = new SubSink();
   myFriends: IUser[] = [];
   currentUser: IUser;
-
+  myInfo: IInfo;
 
   ngOnInit(): void {
     this.init();
   }
 
   init(): void {
+    this.myInfo = this.store.getUserInfo();
     const user$ = this.usersService.getUser(this.info.email);
-    const member$ = this.groupsService.getMembersListByUid(this.info.uid, this.info.groupname);
+    // const member$ = this.groupsService.getMembersListByUid(this.info.uid, this.info.groupname);
+    const member$ = this.groupsService.getIdOfGroup(this.myInfo.uid)
+      .pipe(
+        // tap(data => console.log('구룹ID: ', data)),
+        switchMap(uid => this.groupsService.getMembersStore(uid, this.myInfo.email))
+      );
+
+
 
     combineLatest([user$, member$]).subscribe(([user, friends]) => {
       this.currentUser = user[0];

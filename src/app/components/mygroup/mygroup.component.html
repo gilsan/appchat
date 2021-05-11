@@ -32,10 +32,11 @@
     
        <mat-list>
           <mat-list-item *ngFor="let group of myGroups" >
-             <img matListAvatar [src]="group.groupPic"  class="group" (click)="openGroup(group)" >
-             <h3 matLine>{{group.groupName}}</h3>
+             <img matListAvatar [src]="group.groupPic"  class="group" (click)="openGroup(group)">
              
-             <button mat-icon-button (click)="removeGroup(group)" >
+             <h3 matLine *ngIf="group.iMakeGroup === 'Y';" class="groupname">{{group.groupName}} 생성</h3>
+             <h3 matLine *ngIf="group.iMakeGroup === 'N';" class="groupname">{{group.groupName}} 가입</h3>
+             <button mat-icon-button (click)="removeGroup(group)" *ngIf="group.iMakeGroup === 'Y';">
                 <mat-icon color="warn">delete</mat-icon>
              </button>
              

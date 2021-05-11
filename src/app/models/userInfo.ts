@@ -62,13 +62,16 @@ export interface IMsg {
 }
 
 export interface IGroup {
-  conversationId?: string;
-  creator: string;
+  creater: string;
   displayName: string;
+  photoURL: string;
+  email: string;
   groupName: string;
   groupPic: string;
   groupId: string;
   uid: string;
+  iMakeGroup: string;
+
 }
 
 export interface IGroupMsg {

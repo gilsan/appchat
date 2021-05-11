@@ -43,6 +43,7 @@ import { EntityDataModule } from '@ngrx/data';
 import { entityConfig } from './entity-metadata';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
+import { MemberListComponent } from './components/member-list/member-list.component';
 
 @NgModule({
   declarations: [
@@ -69,7 +70,8 @@ import { EffectsModule } from '@ngrx/effects';
     GroupChatFeedComponent,
     MygroupComponent,
     AddMemberComponent,
-    RemoveMemberComponent
+    RemoveMemberComponent,
+    MemberListComponent
   ],
   imports: [
     BrowserModule,

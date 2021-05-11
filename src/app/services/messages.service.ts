@@ -290,30 +290,30 @@ export class MessagesService implements OnDestroy {
 
   //  구릅 메세지 추가
 
-  addGroupMsg(newMessage, group: IGroup, type: string = 'txt'): void {
-    let isPic;
-    if (type === 'txt') {
-      isPic = false;
-    } else if (type === 'pic') {
-      isPic = true;
-    }
+  // addGroupMsg(newMessage, group: IGroup, type: string = 'txt'): void {
+  //   let isPic;
+  //   if (type === 'txt') {
+  //     isPic = false;
+  //   } else if (type === 'pic') {
+  //     isPic = true;
+  //   }
 
-    this.db.collection('groupconvos/').doc(group.conversationId).collection('messages').add({
-      message: newMessage,
-      timestamp: firebase.default.firestore.FieldValue.serverTimestamp(),
-      sentBy: group.creator,
-      room: group.groupName,
-      isPic
-    }).then(() => {
-      // this.addGroupNotifications(group);
-    });
-  }
+  //   this.db.collection('groupconvos/').doc(group.conversationId).collection('messages').add({
+  //     message: newMessage,
+  //     timestamp: firebase.default.firestore.FieldValue.serverTimestamp(),
+  //     sentBy: group.creater,
+  //     room: group.groupName,
+  //     isPic
+  //   }).then(() => {
+  //     // this.addGroupNotifications(group);
+  //   });
+  // }
 
-  getAllGroupMessages(group: IGroup, count: number): Observable<any> {
-    return this.db.collection('groupconvos').doc(`/${group.conversationId}`)
-      .collection('messages', ref => ref.where('room', '==', group.groupName).orderBy('timestamp', 'desc').limit(count))
-      .valueChanges();
-  }
+  // getAllGroupMessages(group: IGroup, count: number) {
+  //   // return this.db.collection('groupconvos').doc(`/${group.conversationId}`)
+  //   //   .collection('messages', ref => ref.where('room', '==', group.groupName).orderBy('timestamp', 'desc').limit(count))
+  //   //   .valueChanges();
+  // }
 
   getAllMessagesByGroup(group: string, count: number): Observable<any> {
     return this.db.collectionGroup('messages', ref => ref.where('room', '==', group)
@@ -323,7 +323,7 @@ export class MessagesService implements OnDestroy {
 
   addGroupNotifications(group: IGroup): void {
     this.db.collection('groupNotifications').add({
-      sentBy: group.creator,
+      sentBy: group.creater,
       room: group.groupName,
       groupPic: group.groupPic,
       timestamp: firebase.default.firestore.FieldValue.serverTimestamp()

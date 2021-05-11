@@ -1,14 +1,17 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { concatMap, shareReplay, switchMap, tap } from 'rxjs/operators';
+import { SubSink } from 'subsink';
+import { MatDialog } from '@angular/material/dialog';
+
 import { IGroup, IInfo, IUser } from 'src/app/models/userInfo';
 import { StoreService } from 'src/app/services/store.service';
 import { UsersService } from 'src/app/services/users.service';
 import { GroupService } from 'src/app/services/group.service';
-import { SubSink } from 'subsink';
-import { MatDialog } from '@angular/material/dialog';
+
 import { AddMemberComponent } from '../add-member/add-member.component';
 import { GroupInfoComponent } from './../group-info/group-info.component';
 import { RemoveMemberComponent } from '../remove-member/remove-member.component';
-import { concatMap, shareReplay, switchMap, tap } from 'rxjs/operators';
+import { MemberListComponent } from '../member-list/member-list.component';
 
 @Component({
   selector: 'app-group-menu',
@@ -67,6 +70,7 @@ export class GroupMenuComponent implements OnInit, OnDestroy {
         this.currentGroup = this.groupService.currentGroup;
         this.isGroup = true;
         this.isOwner = true;
+        // console.log('[GROUP MENU] ', this.currentGroup);
       }
     });
   }
@@ -110,7 +114,13 @@ export class GroupMenuComponent implements OnInit, OnDestroy {
     }
   }
 
-
+  memberList(): void {
+    this.dialog.open(MemberListComponent, {
+      height: '500px',
+      width: '400px',
+      data: this.currentGroup
+    });
+  }
 
 
 
