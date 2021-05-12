@@ -5,9 +5,13 @@
      <p matLine *ngIf="isMember[i]">
        회원
      <p>
-     <button mat-icon-button 
+     <button mat-icon-button matTooltip="멤버추가"
        (click)="addFriend(user)" *ngIf="!isMember[i]">
          <mat-icon color="primary">add_circle</mat-icon>
      </button>
+     <button mat-icon-button matTooltip="멤버삭제"
+       (click)="removeMember(user)" *ngIf="isMember[i]">
+         <mat-icon color="primary">delete</mat-icon>
+     </button>     
    </mat-list-item>
 </mat-list>

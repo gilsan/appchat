@@ -17,6 +17,7 @@ import { UsersService } from 'src/app/services/users.service';
 import { MessagesService } from 'src/app/services/messages.service';
 import { StoreService } from './../../services/store.service';
 import { GroupService } from 'src/app/services/group.service';
+import { GroupMessages } from './../../services/groupMessages';
 
 @Component({
   selector: 'app-group-chat-feed',
@@ -37,6 +38,7 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
     private dialogRef: MatDialog,
     private store: StoreService,
     private groupService: GroupService,
+    private groupMessage: GroupMessages
   ) {
     this.myInfo = this.store.getUserInfo();
   }
@@ -83,6 +85,7 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
   enteredChat(): void {
     this.subs.sink = this.groupService.enteredGroup$.subscribe(value => {
       this.currentGroup = this.groupService.currentGroup;
+      console.log('채팅구룹: ', this.currentGroup);
       if (value) {
         this.showChat = value;
         this.getMessages(this.count);
@@ -122,8 +125,8 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
 
   addMessage(type): void {
 
-    // this.messagesService.addGroupMsg(this.newmessage, this.currentGroup, type);
-    // this.newmessage = '';
+    this.groupMessage.addGroupMsg(this.newmessage, this.currentGroup, this.myInfo.email, type);
+    this.newmessage = '';
   }
 
   addMessageEvent(): void { }

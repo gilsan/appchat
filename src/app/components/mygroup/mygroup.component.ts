@@ -53,7 +53,9 @@ export class MygroupComponent implements OnInit, OnDestroy {
         console.log('[MY GROUP][53] ', newGroup);
         this.groupService.duplicationCheck(newGroup.groupName, this.user)
           .then((snapShot) => {
+            console.log('[중복검사 결과] [1]', snapShot);
             if (snapShot.empty) {
+              console.log('[중복검사 구룹생성] [2]==>', snapShot.empty);
               this.groupService.addNewGroup(newGroup.groupName, this.user, newGroup.groupId)
                 .then(() => {
                   this.getGroups();
@@ -82,7 +84,7 @@ export class MygroupComponent implements OnInit, OnDestroy {
           .then(() => {
             this.snackBar.open('구룹 생성 했습니다.', '닫기', { duration: 3000 });
             this.getGroups();
-            this.addGroup();
+            // this.addGroup();
             this.groupName = '';
           });
       } else {
@@ -93,7 +95,7 @@ export class MygroupComponent implements OnInit, OnDestroy {
   }
 
   getGroups(): void {
-    this.subs.sink = this.groupService.getGroupsByUid(this.user.uid)
+    this.subs.sink = this.groupService.getGroupsByUid(this.myInfo.uid)
       .subscribe(groups => {
         this.myGroups = groups;
       });

@@ -58,7 +58,7 @@ export class AddMemberComponent implements OnInit, OnDestroy {
   getFriends(): void {
     const friends$ = this.usersService.getAllUsers();
     // const members$ = this.groupsService.getMembersListByUid(this.myInfo.uid, this.groupname);
-    const members$ = this.groupsService.getIdOfGroup(this.myInfo.uid)
+    const members$ = this.groupsService.getGroupID(this.myInfo.uid, this.groupname)
       .pipe(
         tap(data => console.log('구룹ID: ', data)),
         switchMap(uid => this.groupsService.getMembersStore(uid, this.myInfo.email))
@@ -97,9 +97,10 @@ export class AddMemberComponent implements OnInit, OnDestroy {
     this.groupsService.getGroupId(this.myInfo.uid, this.groupname)
       .then((result) => {
         if (result !== 'none') {
-          console.log(' 멤버 추가:', result);
+          // console.log(' 멤버 추가:', result);
           this.groupsService.addMemberByGroupId(result[0].groupId, friend, this.myInfo, result[0].groupName)
-            .then(() => {
+            .then((message) => {
+              console.log(message);
               this.getAddedFriends(friend.uid);
             });
 
@@ -138,6 +139,10 @@ export class AddMemberComponent implements OnInit, OnDestroy {
           }
         });
       });
+  }
+
+  removeMember(friend: IUser) {
+
   }
 
 

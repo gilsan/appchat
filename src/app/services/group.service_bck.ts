@@ -82,18 +82,23 @@ export class GroupService {
         iMakeGroup: 'N',
         uid: user.uid,
         groupId: groupID,
-      }).then(() => {
-        this.db.collection('groupstore').doc(`${groupID}`).collection('memberof').add({
-          creater: user.email,
-          displayName: user.displayName,
-          groupPic: this.groupPicDefault,
-          groupName,
-          iMakeGroup: 'N',
-          uid: user.uid,
-          groupId: groupID,
+      }).then((docRef) => {
+        this.db.doc(`groups/${user.uid}`).collection('group').doc(docRef.id).update({
+          groupID: docRef.id
         }).then(() => {
           resolve('');
         });
+        // this.db.collection('groupstore').doc(`${groupID}`).collection('memberof').add({
+        //   creater: user.email,
+        //   displayName: user.displayName,
+        //   groupPic: this.groupPicDefault,
+        //   groupName,
+        //   iMakeGroup: 'N',
+        //   uid: user.uid,
+        //   groupId: groupID,
+        // }).then(() => {
+        //   resolve('');
+        // });
       });
     });
   }
@@ -110,25 +115,32 @@ export class GroupService {
         iMakeGroup: 'N',
         uid: user.uid,
         groupId: groupID,
-      }).then(() => {
-        this.db.collection('groupstore').doc(`${groupID}`).collection('memberof').add({
-          creater: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-          email: user.email,
-          groupPic: this.groupPicDefault,
-          groupName,
-          iMakeGroup: 'N',
-          uid: user.uid,
-          groupId: groupID,
+      }).then((docRef) => {
+        this.db.doc(`groups/${user.uid}`).collection('group').doc(docRef.id).update({
+          groupID: docRef.id
         }).then(() => {
           resolve('');
         });
+        // this.db.collection('groupstore').doc(`${groupID}`).collection('memberof').add({
+        //   creater: user.email,
+        //   displayName: user.displayName,
+        //   photoURL: user.photoURL,
+        //   email: user.email,
+        //   groupPic: this.groupPicDefault,
+        //   groupName,
+        //   iMakeGroup: 'N',
+        //   uid: user.uid,
+        //   groupId: groupID,
+        // }).then((docRef) => {
+        //   
+        // });
       });
     });
   }
 
-
+  // this.db.doc(`groups/${myinfo.uid}/group/${uid}`).collection('members').doc(docRef.id).update({
+  //   membersUid: docRef.id
+  // });
 
   // group 중복 검사
   duplicationCheck(groupName: string, user: IUser): Promise<any> {

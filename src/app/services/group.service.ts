@@ -53,6 +53,7 @@ export class GroupService {
         this.db.doc(`groups/${user.uid}`).collection('group').doc(docref.id).update({
           groupId: docref.id
         }).then(() => {
+          // resolve('');
           this.db.collection('groupstore').doc(`${groupID}`).collection('memberof').add({
             creater: user.email,
             displayName: user.displayName,
@@ -63,16 +64,19 @@ export class GroupService {
             iMakeGroup: 'Y',
             uid: user.uid,
             groupId: groupID,
-          }).then(() => {
+          }).then((docRef) => {
+            console.log('[내자신을 멤버에 등록: ==> ', docRef.id);
             resolve('');
           });
         });
+
       });
 
     });
   }
 
   addGroup(groupName: string, user: IUser, groupID: string): Promise<any> {
+    let groupid;
     return new Promise((resolve) => {
       this.db.doc(`groups/${user.uid}`).collection('group').add({
         creater: user.email,
@@ -83,23 +87,35 @@ export class GroupService {
         uid: user.uid,
         groupId: groupID,
       }).then(() => {
-        this.db.collection('groupstore').doc(`${groupID}`).collection('memberof').add({
-          creater: user.email,
-          displayName: user.displayName,
-          groupPic: this.groupPicDefault,
-          groupName,
-          iMakeGroup: 'N',
-          uid: user.uid,
-          groupId: groupID,
-        }).then(() => {
-          resolve('');
-        });
+        resolve('');
       });
+      // .then((docref) => {
+      //   groupid = docref.id;
+      //   this.db.collection('groupstore').doc(`${groupID}`).collection('memberof').add({
+      //     creater: user.email,
+      //     displayName: user.displayName,
+      //     groupPic: this.groupPicDefault,
+      //     groupName,
+      //     iMakeGroup: 'N',
+      //     uid: user.uid,
+      //     groupId: groupID,
+      //   }).then((docRef) => {
+      //     console.log('신규멤버추가: ==> ', docRef.id);
+      //     this.db.doc(`groups/${user.uid}`).collection('group').doc(groupid).update({
+      //       memberofId: docRef.id
+      //     }).then(() => {
+      //
+      //     });
+
+      //   });
+      // });
+
     });
   }
 
   addNewGroup(groupName: string, user: IUser, groupID: string): Promise<any> {
     return new Promise((resolve) => {
+      let groupid = '';
       this.db.doc(`groups/${user.uid}`).collection('group').add({
         creater: user.email,
         displayName: user.displayName,
@@ -110,7 +126,8 @@ export class GroupService {
         iMakeGroup: 'N',
         uid: user.uid,
         groupId: groupID,
-      }).then(() => {
+      }).then((docref) => {
+        groupid = docref.id;
         this.db.collection('groupstore').doc(`${groupID}`).collection('memberof').add({
           creater: user.email,
           displayName: user.displayName,
@@ -121,8 +138,14 @@ export class GroupService {
           iMakeGroup: 'N',
           uid: user.uid,
           groupId: groupID,
-        }).then(() => {
-          resolve('');
+        }).then((docRef) => {
+          console.log('가입멤버추가: ==> ', docRef.id);
+          this.db.doc(`groups/${user.uid}`).collection('group').doc(groupid).update({
+            memberofId: docRef.id
+          }).then(() => {
+            resolve('');
+          });
+
         });
       });
     });
@@ -138,67 +161,6 @@ export class GroupService {
     return queryRef;
   }
 
-  createGroup2(groupName: string, user: IUser): Promise<any> {
-    return new Promise((resolve) => {
-      this.db.collection('groups').add({
-        groupName,
-        creater: user.email,
-        conversationId: '',
-        groupPic: this.groupPicDefault,
-        uid: user.uid,
-        displayName: user.displayName,
-        isMyGroup: 'Y'
-      }).then((docRef) => {
-        this.groupDocRef = docRef.id;
-        this.db.collection('groupconvos').add({
-          groupName,
-          creater: user.email
-        }).then((docref) => {
-          this.db.collection('groups').doc(this.groupDocRef).update({
-            conversationId: docref.id,
-            groupId: this.groupDocRef
-          }).then(() => {
-            resolve('');
-          });
-        });
-      });
-
-      // });
-    });
-
-  }
-
-
-  getGroupsByCreater(email: string): Observable<any> {
-    return this.db.collection<IGroup[]>('groups', ref => ref.where('creater', '==', email))
-      .snapshotChanges()
-      .pipe(
-        map(results => convertSnaps(results)),
-        first()
-      );
-  }
-
-  getGroupsByCreaterEmailGroup(email: string, groupname: string): Observable<any> {
-    // console.log('group ', email, groupname);
-    return this.db.collection<IGroup[]>('groups', ref => ref.where('creater', '==', email).where('groupName', '==', groupname))
-      .snapshotChanges()
-      .pipe(
-        map(results => convertSnaps(results)),
-        first(),
-        tap(group => console.log('[group SERVICE][84] ', group))
-      );
-  }
-
-  getMembersByEmail(email: string): Observable<any> {
-
-    return this.db.collectionGroup('members', ref => ref.where('email', '==', email))
-      .snapshotChanges()
-      .pipe(
-        map(results => convertSnaps(results)),
-        first(),
-        map(members => members.filter((member: IMember) => member.email === email)),
-      );
-  }
 
   // Uid로 구룹정보 가져옴.
   getGroupsByUid(uid: string): Observable<any> {
@@ -208,9 +170,7 @@ export class GroupService {
       );
   }
 
-  getGroupsMembersByUid(uid: string): void {
-    this.db.doc(`groups/${uid}`).collection('members').snapshotChanges();
-  }
+
 
   getGroups(email: string): Observable<IGroup[]> {
     return this.db.collection<IGroup[]>('groups', ref => ref.where('creater', '==', email))
@@ -221,49 +181,6 @@ export class GroupService {
       );
   }
 
-  getGroupsMembers(email: string): Observable<any> {
-    return this.db.collectionGroup('members', ref => ref.where('email', '==', email))
-      .get()
-      .pipe(
-        map(snaps => snaps.docs.map(snap => snap.data())),
-      );
-  }
-
-  getGroupByUid(uid: string): Observable<any> {
-    return this.db.doc(`groups/${uid}`).get()
-      .pipe(
-        map(snap => snap.data()),
-        tap(data => console.log('[GROUP] ', data))
-      );
-  }
-
-  getGroupByEmail(email: string, groupname: string): Observable<any> {
-    return this.db.collection('groups', ref => ref.where('creater', '==', email).where('groupName', '==', groupname)).get()
-      .pipe(
-        map(snaps => snaps.docs.map(snap => snap.id)),
-        switchMap(uid => this.db.doc(`groups/${uid}`).get()),
-        map(snaps => snaps.data())
-      );
-  }
-
-  // tslint:disable-next-line:adjacent-overload-signatures
-  getGroupInfoByUid(uid: string, groupname: string): Observable<any> {
-    return this.db.doc(`groups/${uid}`).collection('group', ref => ref.where('groupName', '==', groupname))
-      .get()
-      .pipe(
-        map(snaps => snaps.docs.map(snap => snap.data))
-      );
-  }
-
-  getGroupMembers(email: string, groupname: string): Observable<any> {
-    return this.db.collection('groups', ref => ref.where('creater', '==', email).where('groupName', '==', groupname)).get()
-      .pipe(
-        map(snaps => snaps.docs.map(snap => snap.id)),
-        switchMap(uid => this.db.doc(`groups/${uid}`).collection('members').get()),
-        map(snaps => snaps.docs.map(snap => snap.data())),
-        // map(members => members.filter(member => member.email !== email))
-      );
-  }
 
   getGroupMembersByUid(uid: string, groupname: string): Observable<any> {
     return this.db.doc(`groups/${uid}`).collection('group').get()
@@ -360,9 +277,6 @@ export class GroupService {
   }
 
 
-
-
-
   addNotiMemberByUid(friend: IUser, myinfo: IInfo, groupName: string): Observable<any> {
     console.log('[40][NOTI][멤버버생성][354]');
     return this.db.doc(`groups/${myinfo.uid}`)
@@ -386,26 +300,6 @@ export class GroupService {
           });
         }))
       );
-  }
-
-  // tslint:disable-next-line:adjacent-overload-signatures
-  addGroupNotifications(friend: IUser, myinfo: IInfo, groupname: string, groupId: string = ''): void {
-    this.db.collection('notifications').doc(friend.uid).collection('memberof').add({
-      sentBy: myinfo.email,
-      senderUid: myinfo.uid,
-      groupId,
-      room: groupname,
-      receiver: friend.email,
-      receiverName: friend.displayName,
-      receiverPic: friend.photoURL,
-      receiverUid: friend.uid,
-      timestamp: firebase.default.firestore.FieldValue.serverTimestamp()
-    }).then((docRef) => {
-      this.db.collection('notifications').doc(friend.uid).collection('memberof')
-        .doc(docRef.id).update({
-          memberofUid: docRef.id
-        });
-    });
   }
 
 
@@ -435,16 +329,6 @@ export class GroupService {
     return this.db.doc(`notifications/${notiInfo.receiverUid}/memberof/${notiInfo.memberofUid}`).delete();
   }
 
-  // 회원목록 가져오기
-  // getMembersList(email: string, groupName: string): Observable<any> {
-  //   return this.db.collection(`groups`, ref => ref.where('creater', '==', email).where('groupName', '==', groupName)).get()
-  //     .pipe(
-  //       map(snaps => snaps.docs.map(snap => snap.id)),
-  //       switchMap((uid) => this.db.doc(`groups/${uid}`).collection('members').snapshotChanges()),
-  //       map(result => convertSnaps(result)),
-  //       map(members => members.filter((member: IMember) => member.email !== email))
-  //     );
-  // }
 
   getMembersListByUid(uid: string, groupName: string): Observable<any> {
     return this.db.doc(`groups/${uid}`).collection('group', ref => ref.where('groupName', '==', groupName)).get()
@@ -489,6 +373,15 @@ export class GroupService {
     });
   }
 
+  getGroupID(uid: string, groupName: string): Observable<any> {
+    return this.db.doc(`groups/${uid}`).collection('group', ref => ref.where('groupName', '==', groupName)).get()
+      .pipe(
+        map(snaps => snaps.docs.map(snap => snap.data())),
+        map(group => group[0]),
+        map(group => group.groupId)
+      );
+  }
+
   getIdOfGroup(uid: string): Observable<any> {
     return this.db.doc(`groups/${uid}`).collection('group').get()
       .pipe(
@@ -498,8 +391,63 @@ export class GroupService {
       );
   }
 
+  // tslint:disable-next-line:adjacent-overload-signatures
+  addGroupNotifications(friend: IUser, myinfo: IInfo, groupname: string, groupId: string = ''): void {
+    this.db.collection('notifications').doc(friend.uid).collection('memberof').add({
+      sentBy: myinfo.email,
+      senderUid: myinfo.uid,
+      groupId,
+      room: groupname,
+      receiver: friend.email,
+      receiverName: friend.displayName,
+      receiverPic: friend.photoURL,
+      receiverUid: friend.uid,
+      timestamp: firebase.default.firestore.FieldValue.serverTimestamp()
+    }).then((docRef) => {
+      this.db.collection('notifications').doc(friend.uid).collection('memberof')
+        .doc(docRef.id).update({
+          memberofUid: docRef.id
+        });
+    });
+  }
+
+
+
   addMemberByGroupId(groupId: string, friend: IUser, myinfo: IInfo, groupName: string): Promise<any> {
+    const colRef = this.db.doc(`groupstore/${groupId}`).collection('memberof').ref;
+    const qryRef = colRef.where('email', '==', friend.email).get();
     return new Promise((resolve) => {
+      qryRef.then(snaps => {
+        if (snaps.empty) {
+          console.log('none');
+          this.addGroupNotifications(friend, myinfo, groupName, groupId);
+          resolve('구룹요청 했습니다.');
+          // this.db.doc(`groupstore/${groupId}`).collection('memberof').add({
+          //   creater: myinfo.email,
+          //   displayName: friend.displayName,
+          //   groupName,
+          //   isMyGroup: 'N',
+          //   uid: friend.uid,
+          //   photoURL: friend.photoURL,
+          //   email: friend.email,
+          //   createrUid: myinfo.uid,
+          //   timestamp: firebase.default.firestore.FieldValue.serverTimestamp()
+          // }).then((docRef) => {
+
+          //   // console.log('멤버추가 [413] ', docRef.id);
+          //   // this.db.doc(`groupstore/${groupId}`).collection('memberof').doc(docRef.id).update({
+          //   //   membersUid: docRef.id
+          //   // }).then(() => {
+          //   //   // this.addGroupNotifications(friend, myinfo, groupName, groupId);
+          //   //   // resolve('구룹요청 했습니다.');
+          //   // });
+          // });
+        } else {
+          resolve('이미 존재 합니다.');
+        }
+      });
+
+      /*
       this.db.doc(`groupstore/${groupId}`).collection('memberof').add({
         creater: myinfo.email,
         displayName: friend.displayName,
@@ -518,39 +466,12 @@ export class GroupService {
           resolve('');
         });
       });
+     */
+
     });
 
 
   }
-
-  // addMemberByUid(friend: IUser, myinfo: IInfo, groupName: string): Observable<any> {
-  //   let groupID;
-  //   return this.db.doc(`groups/${myinfo.uid}`)
-  //     .collection('group', ref => ref.where('groupName', '==', groupName)).get()
-  //     .pipe(
-  //       map(snaps => snaps.docs.map(snap => snap.id)),
-  //       tap(uid => groupID = uid[0]),
-  //       switchMap(uid => this.db.doc(`groups/${myinfo.uid}/group/${uid}`).collection('members').add({
-  //         creater: myinfo.email,
-  //         displayName: friend.displayName,
-  //         groupName,
-  //         isMyGroup: 'N',
-  //         uid: friend.uid,
-  //         photoURL: friend.photoURL,
-  //         email: friend.email,
-  //         createrUid: myinfo.uid,
-  //         timestamp: firebase.default.firestore.FieldValue.serverTimestamp()
-  //       }).then((docRef) => {
-  //         this.db.doc(`groups/${myinfo.uid}/group/${uid}`).collection('members').doc(docRef.id).update({
-  //           membersUid: docRef.id
-  //         });
-  //         this.addGroupNotifications(friend, myinfo, groupName, groupID);
-  //       }))
-  //     );
-  // }
-
-
-
 
   // 회원삭제
   removeMember(email: string, groupName: string, friendEmail: string, myuid: string = ''): Observable<any> {
@@ -593,21 +514,21 @@ export class GroupService {
       );
   }
 
-  getRoomInfo2(notiInfo: INotifaction): Observable<any> {
-    console.log('[496][getRoomInfo][2] ==>', notiInfo);
-    return this.db.doc(`groups/${notiInfo.senderUid}`).collection('group', ref => ref.where('groupId', '==', notiInfo.groupId)).get()
-      .pipe(
-        map(snaps => snaps.docs.map(snap => snap.data())),
-        map((group) => {
-          console.log('[498][두번째 방정보찿는다][getRoomInfo] ====>[로 이동 newGroup$][2] ==>', group);
-          group[0].isMyGroup = 'N';
-          return group;
-        }),
-        take(1),
-        tap(group => this.newGroup$.next(group[0]))
-      );
+  // getRoomInfo2(notiInfo: INotifaction): Observable<any> {
+  //   console.log('[496][getRoomInfo][2] ==>', notiInfo);
+  //   return this.db.doc(`groups/${notiInfo.senderUid}`).collection('group', ref => ref.where('groupId', '==', notiInfo.groupId)).get()
+  //     .pipe(
+  //       map(snaps => snaps.docs.map(snap => snap.data())),
+  //       map((group) => {
+  //         console.log('[498][두번째 방정보찿는다][getRoomInfo] ====>[로 이동 newGroup$][2] ==>', group);
+  //         group[0].isMyGroup = 'N';
+  //         return group;
+  //       }),
+  //       take(1),
+  //       tap(group => this.newGroup$.next(group[0]))
+  //     );
 
-  }
+  // }
 
   getRoomInfo(notiInfo: INotifaction): Promise<any> {
     const collRef = this.db.doc(`groups/${notiInfo.senderUid}`).collection('group').ref;
@@ -616,6 +537,7 @@ export class GroupService {
       queryRef.then((snaps) => {
         if (!snaps.empty) {
           const group = snaps.docs.map(snap => snap.data());
+          console.log('[초대수락 시작][getRoomInfo][3], ');
           this.newGroup$.next(group[0]);
           resolve(snaps.docs.map(snap => snap.data()));
         }
