@@ -11,7 +11,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { LoadingSpinnerComponent } from '../loading-spinner/loading-spinner.component';
 
 import * as _ from 'lodash';
-import { concatMap } from 'rxjs/operators';
+import { concatMap, map } from 'rxjs/operators';
 import { SafeResourceUrl } from '@angular/platform-browser';
 import { UsersService } from 'src/app/services/users.service';
 import { MessagesService } from 'src/app/services/messages.service';
@@ -30,10 +30,6 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
   @ViewChild('scrollMe') private myScroller: ElementRef;
   sanitizer: any;
   constructor(
-    private firebaseAuth: AngularFireAuth,
-    private messagesService: MessagesService,
-    private auth: FirestoreService,
-    private firestoreService: FirestoreService,
     private userService: UsersService,
     private dialogRef: MatDialog,
     private store: StoreService,
@@ -46,13 +42,14 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
   myInfo: IInfo;
   showChat: boolean;
   currentUseremail: string;
+  currentChatUser: IUser;
   myProfile: IUser = { displayName: '', email: '', photoURL: '', state: '', uid: '' };
-  messages: IGroupMsg[] = [];
+  messages: IMsg[] = [];
   loadingSpinner = false;
   MyId: string;
   MyAvatar: string;
   currentGroup: IGroup;
-
+  group: IGroup;
   newmessage: string;
   checkFirst = 1;
   count = 5; // InfiniteScrollHelper
@@ -79,8 +76,17 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
       .subscribe((user: IUser[]) => {
         this.MyId = user[0].email;
         this.MyAvatar = user[0].photoURL;
+        this.groupService.getGroupsByUid(this.MyId)
+          .pipe(
+            map(group => group[0])
+          )
+          .subscribe((group) => {
+            this.group = group;
+          });
       });
   }
+
+
 
   enteredChat(): void {
     this.subs.sink = this.groupService.enteredGroup$.subscribe(value => {
@@ -98,26 +104,24 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
   }
 
   getMessages(count): void {
-    // console.log(this.currentGroup);
-    // this.subs.sink = this.messagesService.getAllGroupMessages(this.currentGroup, count)
-    //   .subscribe((messages) => {
-    //     const reverse = _.reverse(messages);
-    //     this.messages = reverse; // 순서를 역순으로 만듬
+    this.subs.sink = this.groupMessage.getGroupMessages(this.currentGroup.groupId, count)
+      .subscribe((messages) => {
+        const reverse = _.reverse(messages);
+        this.messages = reverse; // 순서를 역순으로 만듬
+        console.log('메세지', this.messages);
+        if (this.messages.length === this.trackMsgCount) {
+          this.shouldLoad = false;
+        } else {
+          this.trackMsgCount = this.messages.length;
+        }
 
+        if (this.checkFirst === 1) {
+          this.openDialog();
+          this.checkFirst += 1;
+        }
+        this.scrollDown();
 
-    //     if (this.messages.length === this.trackMsgCount) {
-    //       this.shouldLoad = false;
-    //     } else {
-    //       this.trackMsgCount = this.messages.length;
-    //     }
-
-    //     if (this.checkFirst === 1) {
-    //       this.openDialog();
-    //       this.checkFirst += 1;
-    //     }
-    //     this.scrollDown();
-
-    //   });
+      });
   }
 
 
@@ -165,16 +169,16 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
   }
 
   sendImage(event): void {
-    // const selectedFiles = event.target.files;
-    // if (selectedFiles.item(0)) {
-    //   this.messagesService.uploadPic(selectedFiles.item(0), this.myInfo.uid)
-    //     .pipe(
-    //       concatMap(() => this.messagesService.getUploadedPicURL(this.myInfo.uid))
-    //     ).subscribe((data) => {
-    //       this.newmessage = data;
-    //       this.addMessage('pic');
-    //     });
-    // }
+    const selectedFiles = event.target.files;
+    if (selectedFiles.item(0)) {
+      this.groupMessage.uploadPic(selectedFiles.item(0), this.currentGroup.groupId)
+        .pipe(
+          concatMap(() => this.groupMessage.getUploadedPicURL(this.currentGroup.groupId))
+        ).subscribe((data) => {
+          this.newmessage = data;
+          this.addMessage('pic');
+        });
+    }
   }
 
 
