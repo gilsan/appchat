@@ -51,6 +51,7 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
   currentGroup: IGroup;
   group: IGroup;
   newmessage: string;
+  messageNo: number = 0;
   checkFirst = 1;
   count = 5; // InfiniteScrollHelper
   trackMsgCount = 0;
@@ -91,7 +92,7 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
   enteredChat(): void {
     this.subs.sink = this.groupService.enteredGroup$.subscribe(value => {
       this.currentGroup = this.groupService.currentGroup;
-      console.log('채팅구룹: ', this.currentGroup);
+      // console.log('채팅구룹: ', this.currentGroup);
       if (value) {
         this.showChat = value;
         this.getMessages(this.count);
@@ -108,7 +109,7 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
       .subscribe((messages) => {
         const reverse = _.reverse(messages);
         this.messages = reverse; // 순서를 역순으로 만듬
-        console.log('메세지', this.messages);
+        // console.log('메세지', this.messages);
         if (this.messages.length === this.trackMsgCount) {
           this.shouldLoad = false;
         } else {
