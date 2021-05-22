@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { combineLatest } from 'rxjs';
 import { first, last, switchMap, tap } from 'rxjs/operators';
 import * as _ from 'lodash';
@@ -34,6 +34,7 @@ export class AddMemberComponent implements OnInit, OnDestroy {
     private friendService: FriendsService,
     private groupsService: GroupService,
     public dialogRef: MatDialogRef<AddMemberComponent>,
+    private snackBar: MatSnackBar,
     @Inject(MAT_DIALOG_DATA) public groupname: string,
   ) { }
 
@@ -97,11 +98,10 @@ export class AddMemberComponent implements OnInit, OnDestroy {
     this.groupsService.getGroupId(this.myInfo.uid, this.groupname)
       .then((result) => {
         if (result !== 'none') {
-          // console.log(' 멤버 추가:', result);
           this.groupsService.addMemberByGroupId(result[0].groupId, friend, this.myInfo, result[0].groupName)
             .then((message) => {
-              console.log(message);
               this.getAddedFriends(friend.uid);
+              this.snackBar.open('구룹 요청을 했습니다.', '닫기', { duration: 3000 });
             });
 
         }
@@ -115,7 +115,6 @@ export class AddMemberComponent implements OnInit, OnDestroy {
     this.subs.sink = combineLatest([friends$, members$])
       .pipe(
         first(),
-        // tap(data => console.log('회원갱신: ', data)),
       )
       .subscribe(([friends, members]) => {
         console.log('회원갱신:', members);

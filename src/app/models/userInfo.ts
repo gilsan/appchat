@@ -57,6 +57,8 @@ export interface IMsg {
   message: string;
   timestamp: string;
   sentBy: string;
+  sentPhoto: string;
+  sentName: string;
   receiveBy: string;
   isPic: boolean;
 }

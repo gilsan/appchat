@@ -12,7 +12,7 @@ import { LoadingSpinnerComponent } from '../loading-spinner/loading-spinner.comp
 
 import * as _ from 'lodash';
 import { concatMap, map } from 'rxjs/operators';
-import { SafeResourceUrl } from '@angular/platform-browser';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { UsersService } from 'src/app/services/users.service';
 import { MessagesService } from 'src/app/services/messages.service';
 import { StoreService } from './../../services/store.service';
@@ -28,22 +28,23 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
   private subs = new SubSink();
 
   @ViewChild('scrollMe') private myScroller: ElementRef;
-  sanitizer: any;
+  // safeurl: SafeResourceUrl = this.sanitizer.bypassSecurityTrustUrl(this.source);
   constructor(
     private userService: UsersService,
     private dialogRef: MatDialog,
     private store: StoreService,
     private groupService: GroupService,
-    private groupMessage: GroupMessages
+    private groupMessage: GroupMessages,
+    private sanitizer: DomSanitizer,
   ) {
     this.myInfo = this.store.getUserInfo();
   }
 
   myInfo: IInfo;
   showChat: boolean;
+  user: IUser;
   currentUseremail: string;
   currentChatUser: IUser;
-  myProfile: IUser = { displayName: '', email: '', photoURL: '', state: '', uid: '' };
   messages: IMsg[] = [];
   loadingSpinner = false;
   MyId: string;
@@ -51,7 +52,6 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
   currentGroup: IGroup;
   group: IGroup;
   newmessage: string;
-  messageNo: number = 0;
   checkFirst = 1;
   count = 5; // InfiniteScrollHelper
   trackMsgCount = 0;
@@ -75,6 +75,7 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
     this.myInfo = this.store.getUserInfo();
     this.userService.getUser(this.myInfo.email)
       .subscribe((user: IUser[]) => {
+        this.user = user[0];
         this.MyId = user[0].email;
         this.MyAvatar = user[0].photoURL;
         this.groupService.getGroupsByUid(this.MyId)
@@ -109,7 +110,7 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
       .subscribe((messages) => {
         const reverse = _.reverse(messages);
         this.messages = reverse; // 순서를 역순으로 만듬
-        // console.log('메세지', this.messages);
+        console.log('메세지', this.messages);
         if (this.messages.length === this.trackMsgCount) {
           this.shouldLoad = false;
         } else {
@@ -130,7 +131,7 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
 
   addMessage(type): void {
 
-    this.groupMessage.addGroupMsg(this.newmessage, this.currentGroup, this.myInfo.email, type);
+    this.groupMessage.addGroupMsg(this.newmessage, this.currentGroup, this.user, type);
     this.newmessage = '';
   }
 
@@ -172,9 +173,9 @@ export class GroupChatFeedComponent implements OnInit, OnDestroy {
   sendImage(event): void {
     const selectedFiles = event.target.files;
     if (selectedFiles.item(0)) {
-      this.groupMessage.uploadPic(selectedFiles.item(0), this.currentGroup.groupId)
+      this.groupMessage.uploadGroupPic(selectedFiles.item(0), this.currentGroup.groupId)
         .pipe(
-          concatMap(() => this.groupMessage.getUploadedPicURL(this.currentGroup.groupId))
+          concatMap(() => this.groupMessage.getGroupUploadedPicURL(this.currentGroup.groupId))
         ).subscribe((data) => {
           this.newmessage = data;
           this.addMessage('pic');

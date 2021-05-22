@@ -89,26 +89,6 @@ export class GroupService {
       }).then(() => {
         resolve('');
       });
-      // .then((docref) => {
-      //   groupid = docref.id;
-      //   this.db.collection('groupstore').doc(`${groupID}`).collection('memberof').add({
-      //     creater: user.email,
-      //     displayName: user.displayName,
-      //     groupPic: this.groupPicDefault,
-      //     groupName,
-      //     iMakeGroup: 'N',
-      //     uid: user.uid,
-      //     groupId: groupID,
-      //   }).then((docRef) => {
-      //     console.log('신규멤버추가: ==> ', docRef.id);
-      //     this.db.doc(`groups/${user.uid}`).collection('group').doc(groupid).update({
-      //       memberofId: docRef.id
-      //     }).then(() => {
-      //
-      //     });
-
-      //   });
-      // });
 
     });
   }
@@ -211,11 +191,11 @@ export class GroupService {
   uploadProfilePic(file: File, groupUid: string, uid: string): Observable<any> {
     return from(this.storage.upload(`groupspics/${groupUid}`, file))
       .pipe(
-        // tap(_ => console.log('UPLOAD ==> ')),
+
         concatMap(() => this.downloadProfilePicURL(groupUid)),
         tap(data => console.log('[uploadProfilePic][239] ', data)),
         tap((url) => this.updateGroupPic(uid, url))
-        // tap((url) => this.updateGroupInfo(uid, url))
+
       );
   }
 
@@ -236,7 +216,6 @@ export class GroupService {
         map(snaps => snaps.docs.map(snap => snap.data())),
         tap((data: IGroup[]) => this.currentGroup = data[0])
       ).subscribe(() => {
-        console.log('[그림갱신][newGroup$]');
         this.newGroup$.next(this.currentGroup);
         this.enteredGroup.next(true);
       });
@@ -278,7 +257,7 @@ export class GroupService {
 
 
   addNotiMemberByUid(friend: IUser, myinfo: IInfo, groupName: string): Observable<any> {
-    console.log('[40][NOTI][멤버버생성][354]');
+    console.log('[260][addNotiMemberByUid][NOTI][멤버생성]');
     return this.db.doc(`groups/${myinfo.uid}`)
       .collection('group', ref => ref.where('groupName', '==', groupName)).get()
       .pipe(
@@ -393,6 +372,7 @@ export class GroupService {
 
   // tslint:disable-next-line:adjacent-overload-signatures
   addGroupNotifications(friend: IUser, myinfo: IInfo, groupname: string, groupId: string = ''): void {
+    console.log('[375][addGroupNotifications][NOTI][멤버생성]');
     this.db.collection('notifications').doc(friend.uid).collection('memberof').add({
       sentBy: myinfo.email,
       senderUid: myinfo.uid,
@@ -422,52 +402,10 @@ export class GroupService {
           console.log('none');
           this.addGroupNotifications(friend, myinfo, groupName, groupId);
           resolve('구룹요청 했습니다.');
-          // this.db.doc(`groupstore/${groupId}`).collection('memberof').add({
-          //   creater: myinfo.email,
-          //   displayName: friend.displayName,
-          //   groupName,
-          //   isMyGroup: 'N',
-          //   uid: friend.uid,
-          //   photoURL: friend.photoURL,
-          //   email: friend.email,
-          //   createrUid: myinfo.uid,
-          //   timestamp: firebase.default.firestore.FieldValue.serverTimestamp()
-          // }).then((docRef) => {
-
-          //   // console.log('멤버추가 [413] ', docRef.id);
-          //   // this.db.doc(`groupstore/${groupId}`).collection('memberof').doc(docRef.id).update({
-          //   //   membersUid: docRef.id
-          //   // }).then(() => {
-          //   //   // this.addGroupNotifications(friend, myinfo, groupName, groupId);
-          //   //   // resolve('구룹요청 했습니다.');
-          //   // });
-          // });
         } else {
           resolve('이미 존재 합니다.');
         }
       });
-
-      /*
-      this.db.doc(`groupstore/${groupId}`).collection('memberof').add({
-        creater: myinfo.email,
-        displayName: friend.displayName,
-        groupName,
-        isMyGroup: 'N',
-        uid: friend.uid,
-        photoURL: friend.photoURL,
-        email: friend.email,
-        createrUid: myinfo.uid,
-        timestamp: firebase.default.firestore.FieldValue.serverTimestamp()
-      }).then((docRef) => {
-        this.db.doc(`groupstore/${groupId}`).collection('memberof').doc(docRef.id).update({
-          membersUid: docRef.id
-        }).then(() => {
-          this.addGroupNotifications(friend, myinfo, groupName, groupId);
-          resolve('');
-        });
-      });
-     */
-
     });
 
 
@@ -514,21 +452,6 @@ export class GroupService {
       );
   }
 
-  // getRoomInfo2(notiInfo: INotifaction): Observable<any> {
-  //   console.log('[496][getRoomInfo][2] ==>', notiInfo);
-  //   return this.db.doc(`groups/${notiInfo.senderUid}`).collection('group', ref => ref.where('groupId', '==', notiInfo.groupId)).get()
-  //     .pipe(
-  //       map(snaps => snaps.docs.map(snap => snap.data())),
-  //       map((group) => {
-  //         console.log('[498][두번째 방정보찿는다][getRoomInfo] ====>[로 이동 newGroup$][2] ==>', group);
-  //         group[0].isMyGroup = 'N';
-  //         return group;
-  //       }),
-  //       take(1),
-  //       tap(group => this.newGroup$.next(group[0]))
-  //     );
-
-  // }
 
   getRoomInfo(notiInfo: INotifaction): Promise<any> {
     const collRef = this.db.doc(`groups/${notiInfo.senderUid}`).collection('group').ref;

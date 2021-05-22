@@ -5,7 +5,7 @@ import { GroupService } from 'src/app/services/group.service';
 import { StoreService } from 'src/app/services/store.service';
 import { UsersService } from 'src/app/services/users.service';
 import { SubSink } from 'subsink';
-import { first, switchMap, tap } from 'rxjs/operators';
+import { distinct, first, switchMap, tap } from 'rxjs/operators';
 import { MessagesService } from 'src/app/services/messages.service';
 import { combineLatest, from } from 'rxjs';
 
@@ -46,7 +46,7 @@ export class MygroupComponent implements OnInit, OnDestroy {
   notificationGroup(): void {
     this.groupService.newGroupOb$
       .pipe(
-        first(),
+        distinct(),
         tap((data) => console.log('[MY GROUP]', data))
       )
       .subscribe((newGroup: IGroup) => {
